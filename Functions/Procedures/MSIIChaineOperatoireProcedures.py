@@ -44,10 +44,10 @@ def MSII_procedure (obj,**kwargs):
 
 
     # Chaine operatoire preparation
-    CO_prepare_procedure(obj)
+    CO_prepare_procedure(obj,**kwargs)
 
     # get polylines
-    obj.polyline_to_nx()
+    obj.edges_to_polygraphs()
     obj.polygraphs_to_polylines()
 
 
@@ -57,7 +57,7 @@ def MSII_procedure (obj,**kwargs):
     obj.prepare_polyline()
 
     #create MSII1D_Pline object and calculate the MSII-1D  
-    obj.polygraphs_to_nx()
+    obj.polygraphs_to_graph()
 
     obj.calc_II_new_sphere (diameter,n_rad)
     obj.get_feature_vectors()
@@ -80,11 +80,10 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
 
     for n in range(0,n_rad):
-        print(n)
 
         obj.segment_pline_selected_radius(n)
 
-        obj.segment_to_ridgegraph_MSII()
+        obj.segment_to_graph_MSII()
 
         obj.ridge_pairs()
 
@@ -106,7 +105,6 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
         edges_turned = {(edge[1],edge[0]) for edge in edges}
 
-        # directededges_parameters(edges,edges_turned,'turned')
         evaluate_directed_edges(DiG_ridges_edges [n],edges_turned)
 
         evaluate_directed_edges(DiG_ridges_edges [n],edges)
@@ -115,3 +113,4 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
         evaluate_directed_edges(edges,DiG_ridges_edges [n])
 
+    

@@ -30,7 +30,7 @@ from Functions.exportFiles.writeTxt import write_labels_txt_file
 
 # Functions  for creating 3D shaped connections of graph models
 # from Classes.Primitive_3D.EdgeShapes3D import generate_unitarrow,generate_unitconnection
-from Functions.Essential3DPlotting import arrow_trafomat,create_rotated_arrow,connection_trafomat,create_rotated_connection
+from Functions.Essential3DPlotting import arrow_trafomat,create_rotated_arrow,connection_trafomat,create_rotated_connection,create_labeling_arrows
 
 
 class ChaineOperatoire (PolylineGraphs):
@@ -79,6 +79,10 @@ class ChaineOperatoire (PolylineGraphs):
         self.ridges_arrows = trimesh.util.concatenate([ self.arrows_mesh,
                                                         self.nodes_mesh,
                                                         self.ridges_mesh])        
+        
+        self.ridges_arrows = trimesh.util.concatenate([ self.arrows_mesh,
+                                                self.nodes_mesh,
+                                                self.ridges_mesh]) 
 
         self.ridges_arrows.export(''.join ([self.path, 
                                             self.id,
@@ -86,14 +90,16 @@ class ChaineOperatoire (PolylineGraphs):
                                             '_ridges_arrows', 
                                             '.ply']),
                                             file_type='ply')
+        
+
   
     def create_arrows_mesh (self, 
                             DiG,
                             circumference):
 
-        arrow_list = [create_rotated_arrow (edge,self.centroids,circumference)[1] for edge in DiG.edges]
+        self.arrows_list = [create_rotated_arrow (edge,self.centroids,circumference)[1] for edge in DiG.edges]
 
-        self.arrows_mesh = trimesh.util.concatenate(arrow_list)
+        self.arrows_mesh = trimesh.util.concatenate(self.arrows_list)
 
     def create_chaine_operatoire_labels (self):
         vert_dict = {n_vert:1 for n_vert in range(0,len(self.arrows_mesh.vertices))}
@@ -167,6 +173,7 @@ class ChaineOperatoire (PolylineGraphs):
                     for n_l in neigh_labels
                     if n_l in self.neighbouring_labels[label]
                 }
+        
     def export_DiG_gexf (self):
 
         nx.write_gexf(self.DiG_manual, ''.join([self.path, 
@@ -174,6 +181,50 @@ class ChaineOperatoire (PolylineGraphs):
                                                 'edge_name',
                                                 '_ridges_arrows',
                                                 '.gexf']))
+        
+    # creating and exporting labels for 3D plotting for the 3D representation of the ChaineOperatoire 
+    def create_3D_label(self):
+        """
+        Create and export 3D labels for the object's meshes.
+
+        This function creates a dictionary of vertex labels for arrows, nodes, and
+        ridges meshes. It then updates this dictionary with labels for nodes and ridges
+        before exporting the labels using `export_arrow_labels`.
+
+        Args:
+            self (object): Current ChaineOperatoire object instance.
+        """
+        vert_dict = {n + n_arr * len(arrow.vertices): label 
+                        for n_arr,arrow in enumerate(self.arrows_list) 
+                            for n,label in enumerate(create_labeling_arrows(arrow))}
+
+        vert_dict.update({len(vert_dict.keys()) + n_vert + 1: 0 
+                            for n_vert in range(0,len(self.nodes_mesh.vertices))})
+        vert_dict.update({len(vert_dict.keys()) + n_vert + 1: 4 
+                            for n_vert in range(0,len(self.ridges_mesh.vertices))})
+
+        self.export_arrow_labels(vert_dict)
+
+    def export_arrow_labels(self,
+                            labels_dict: dict):
+        
+        """
+        Export the arrow labels to a text file.
+        
+            self (object): Current ChaineOperatoire object instance.
+            labels_dict (dict): A dictionary containing the labels.
+        """
+        print(''.join([self.path, 
+                                                    self.id, 
+                                                    self.preprocessed,
+                                                    self.edge_name,
+                                                    '_label']))
+
+        write_labels_txt_file (labels_dict,''.join([self.path, 
+                                                    self.id, 
+                                                    self.preprocessed,
+                                                    self.edge_name,
+                                                    '_label'])) 
 
 class GraphEvaluation (PolylineGraphs):
 

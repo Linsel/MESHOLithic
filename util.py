@@ -9,6 +9,9 @@ standard library.
 
 import sys, os
 
+software_name = 'Linselytics Software Framework'
+software_abbreviation = 'LL'
+
 
 # geometry objects
 import trimesh

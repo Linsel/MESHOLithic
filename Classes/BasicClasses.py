@@ -7,7 +7,6 @@ BasicClasses.py
 
 from util import *
 
-
 # import timing function decorator  
 from Functions.EssentialDecorators import timing
 
@@ -44,8 +43,9 @@ class Mesh:
                 metadata: np.ndarray = None,
                 edges: np.ndarray = None,
                 vertex_neighbors: list = None,
-                vertex_neighbors_dict: dict = None,
-                vertex_adjacency_graph: nx.Graph = None) -> object:
+                vertex_attributes: dict = None,
+                vertex_adjacency_graph: nx.Graph = None,
+                vertex_neighbors_dict: dict = None) -> object:
 
         """
         A Mesh object contains a triangular 3D mesh.
@@ -61,8 +61,8 @@ class Mesh:
             metadata (ndarray): Array of integers representing any metadata about the mesh with shape (n, 2).
             edges (ndarray): List of vertex indices making up edges with shape (n, 2).
             vertex_neighbors (list): List of vertex neighbors.
-            vertex_neighbors_dict (dict): Dictionary with vertex indices as keys and adjacent neighbors as values.
             vertex_adjacency_graph (nx.Graph): Graph representing vertices and edges between them, where vertices are nodes and edges are edges.
+            vertex_neighbors_dict (dict): Dictionary with vertex indices as keys and adjacent neighbors as values.
         """
 
         # check for None only to avoid warning messages in subclasses
@@ -86,10 +86,10 @@ class Mesh:
             self.edges = edges
         if vertex_neighbors is not None:
             self.vertex_neighbors = vertex_neighbors
-        if vertex_neighbors_dict is not None:
-            self.vertex_neighbors_dict = vertex_neighbors_dict
         if vertex_adjacency_graph is not None:
             self.vertex_adjacency_graph = vertex_adjacency_graph
+        if vertex_neighbors_dict is not None:
+            self.vertex_neighbors_dict = vertex_neighbors_dict            
 
     @timing
     def load_ply(self, 
@@ -128,46 +128,47 @@ class Mesh:
 
         # Read the vertex data as array
         self.vertices_dict = {n:v for n,v in enumerate(self.tri_mesh.vertices)}
+
         # Read the face data as array
         self.faces = np.array(self.tri_mesh.faces)
         
         # Read the edge data
         self.edges = self.tri_mesh.edges
-        
-        # Create a list of vertex_neighbors
+
+        # Read a list of vertex_neighbors
         self.vertex_neighbors = self.tri_mesh.vertex_neighbors
+
+        # Read the vertex_adjacency_graph        
+        self.vertex_adjacency_graph = self.tri_mesh.vertex_adjacency_graph        
 
         # Create a dict of vertex_neighbors
         self.vertex_neighbors_dict = {num: vertex_neighbors 
                                            for num, vertex_neighbors in enumerate(self.vertex_neighbors)}
          
-        # Create a graph model of vertex_adjacency_graph        
-        self.vertex_adjacency_graph = self.tri_mesh.vertex_adjacency_graph
-    
-    def get_curvature(self):
+    def get_quality(self):
 
         """
-        Saves the curvature separately in the curvature variable.
+        Saves the quality separately in the quality variable.
         """      
 
-        self.curvature = self.tri_mesh.metadata ['ply_raw']['vertex']['data']['quality']
+        self.quality = self.tri_mesh.metadata ['ply_raw']['vertex']['data']['quality']
 
-    # saving curvature in accesible variable or calculating the maximum gaussian curvature in 8 diffent radii
+    # saving quality in accesible variable or calculating the maximum gaussian curvature in 8 diffent radii
     def get_or_calc_curvature(self):
 
         """
-        Accesses the curvature or calculates the maximum discrete Gaussian curvature in 8 spheres with equidistant radii.
+        Accesses the quality or calculates the maximum discrete Gaussian curvature in 8 spheres with equidistant radii.
         """          
 
         try:
             # Read the quality as curvature of vertices
-            self.get_curvature()
+            self.get_quality()
             
         except:
             # radii in which the gaussian curvature gets measured
             radii = np.linspace(0.001, 2.0, 8)
             # Calculate the Gaussian curvature and set it in ratio to the sphere_ball_intersection
-            self.curvature = np.array([np.max(g) for g in np.array([discrete_gaussian_curvature_measure(self.tri_mesh, self.vertices, r)/sphere_ball_intersection(1, r) for r in radii]).T])
+            self.quality = np.array([np.max(g) for g in np.array([discrete_gaussian_curvature_measure(self.tri_mesh, self.vertices, r)/sphere_ball_intersection(1, r) for r in radii]).T])
 
     # def get_vertices(self):
     #     """
@@ -226,7 +227,7 @@ class Mesh:
 #
 class Pline:
     """
-    The Pline object stores the Pline file generated according to the GigaMEsh Software Standard. 
+    The Pline object stores the Pline file generated according to the GigaMesh Software Standard. 
     """
 
     def __init__(self,
@@ -482,7 +483,7 @@ class manualEdges:
     def create_manual_DiGraph (self):
 
         """
-        
+        Create a manual directed Graph of manual edges. 
         
         """
         
@@ -491,9 +492,6 @@ class manualEdges:
         for edge in self.manual_edges:
             self.DiG_manual.add_nodes_from(edge)
             self.DiG_manual.add_edge(*edge)
-
-  
-
 
 
     # compare two operational sequences 
@@ -513,12 +511,7 @@ class manualEdges:
             accuracy (float): The accuracy of the edge_set compared to the manual edges.
         """
      
-        eval_edge_direction, accuracy = evaluate_directed_edges(edge, self.manual_edges)
-
-        return eval_edge_direction, accuracy 
-    
-
-
+        eval_edge_direction, accuracy = evaluate_directed_edges(edge, self.manual_edges)# n_components = 3
 
 class NpEncoder(json.JSONEncoder):
 

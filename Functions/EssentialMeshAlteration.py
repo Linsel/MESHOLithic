@@ -44,7 +44,6 @@ def metadata_label_array(   metadata: np.ndarray,
 
     return metadata_arr
 
-
 def get_nearest_neighbor(   mesh: object,
                             point: np.ndarray) -> np.ndarray:
 
@@ -98,15 +97,25 @@ def create_label_submeshes (mesh,labels):
 
     return submeshes
 
+def get_submesh_quality (quality, vertlist):
+
+    """
+    Returns the quality property of a submesh in the quality dictionary.
+    """      
+
+    sub_quality =  {n:quality[n] for n in vertlist}
+
+    return sub_quality
+
 # This function returns the most common element in a list of values.
 def most_common_neighbour_label (lst):
 
     return max(set(lst), key=lst.count)
 
-def convert_stl_to_ply(path,name):
+def convert_to_ply(path,name,ending):
 
     # Load your STL file
-    mesh = trimesh.load(''.join([path,name,'.stl']))
+    mesh = trimesh.load(''.join([path,name,ending]))
 
     # Export as PLY
     try:

@@ -52,16 +52,16 @@ def create_unordered_graph (unordered_nodes):
 
     return G
 
-def get_max_outline(graph,origin,target):
-    outline_list = list(nx.all_simple_paths (graph,origin, target))
+def get_max_outline(G,origin,target):
+    outline_list = list(nx.all_simple_paths (G,origin, target))
     return outline_list
 
-def get_connected_components(graph):
-    longest_polyline = nx.connected_components(graph)
+def get_connected_components(G):
+    longest_polyline = nx.connected_components(G)
     return longest_polyline
 
-def get_longest_outline(graph,origin,target):
-    outline_list = list(nx.all_simple_paths (graph,origin, target))
+def get_longest_outline(G,origin,target):
+    outline_list = list(nx.all_simple_paths (G,origin, target))
     return outline_list[len(outline_list)-1]
 
 # def line_sphere_intersection(line_start, line_dir, sphere_center, sphere_radius):
@@ -134,11 +134,24 @@ def line_sphere_intersection(origin, target, sphere_center, sphere_radius):
 
     return np.array(point_b)
 
-def get_cycle(graph):
+def get_cycle(G:nx.graph):
 
-    max_cycle = max([len(cycle) for cycle in nx.cycle_basis(graph)])
+    """
+    Finds the largest cycle in an undirected graph and returns it along with its reverse.
 
-    cycle = [cycle for cycle in nx.cycle_basis(graph) if len(cycle) == max_cycle][0]
+    Args:
+        G (nx.Graph): A NetworkX graph object.
+
+    Returns:
+        tuple: A tuple containing two elements:
+            - cycle (list): longest cycle in graph.
+            - rev_cycle (list): longest cycle (reversed) in graph.
+
+    """    
+
+    max_cycle = max([len(cycle) for cycle in nx.cycle_basis(G)])
+
+    cycle = [cycle for cycle in nx.cycle_basis(G) if len(cycle) == max_cycle][0]
 
     cycle = cycle + [cycle[0]]
 

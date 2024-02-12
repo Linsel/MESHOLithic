@@ -92,3 +92,22 @@ def create_rotated_connection (edge,centroids,circumference):
     connection_transformed = connection_trafomat(circumference, scale, trafomat)
 
     return trafomat,connection_transformed
+
+# labels
+def create_labeling_arrows(mesh:object):
+
+    """
+    Create a list of labels for each vertex in the mesh.
+
+    This function assigns a label based on the vertex index. If the index is
+    less than 66, it assigns label 2, otherwise, it assigns label 1.
+
+    Args:
+        mesh (trimesh.Mesh): The trimesh.mesh for which to create labels.
+
+    Returns:
+        list: A list of integers representing the labels for each vertex.
+    """
+
+    return [2 if n < 66 else 1 for n,_ in enumerate(mesh.vertices)]
+

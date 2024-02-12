@@ -30,7 +30,6 @@ def ridge_prepare_procedure (obj,**kwargs):
     
     obj.prep_ridges()
 
-
 @timing
 def kmeans_label_procedure (obj,**kwargs):
 
@@ -101,7 +100,6 @@ def direct_graph_area_procedure (obj,**kwargs):
 
     directededges_parameters(path,id,edges,obj.area,'area')
 
-
 @timing
 def export_ridges_mesh_procedure (obj,**kwargs):
 
@@ -122,7 +120,6 @@ def export_ridges_mesh_procedure (obj,**kwargs):
                                     '_ridges', 
                                     '.ply']),
                                     file_type='ply')
-
 
 @timing
 def direct_graph_area_procedure (obj,**kwargs):

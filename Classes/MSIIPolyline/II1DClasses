@@ -492,6 +492,8 @@ class MSIIChaineOperatoire (MSIIGraphs):
                                                       '-'.join([''.join(['r',]), ''.join(['c',])])]),                                          
                                             '.ply']),
                                             file_type='ply')
+        
+        
 
     # edge width scaled by edge weight 
     def create_rotated_scaled_arrow (self, edge, DiG):
@@ -546,17 +548,17 @@ class MSIIChaineOperatoire (MSIIGraphs):
         self.vert_dict = vert_dict        
 
     def label_connections_nodes (self):
-        label_vertices(  self,
-                0,
-                self.connections_mesh.vertices,
-                self.G_ridges.nodes, 
-                '_connections')
+        label_vertices( self,
+                        0,
+                        self.connections_mesh.vertices,
+                        self.G_ridges.nodes, 
+                        '_connections')
 
-        label_vertices(  self, 
-                len(self.connections_mesh.vertices),
-                self.nodes_mesh.vertices,
-                self.centroids.keys(),
-                '_nodes')
+        label_vertices( self, 
+                        len(self.connections_mesh.vertices),
+                        self.nodes_mesh.vertices,
+                        self.centroids.keys(),
+                        '_nodes')
 
     def export_chaine_operatoire_labels (self,label_dict):
 
@@ -565,4 +567,3 @@ class MSIIChaineOperatoire (MSIIGraphs):
     def export_chaine_operatoire_functvals (self,label_dict):
 
         write_labels_txt_file (label_dict,''.join([self.path, self.id, str(self.nrad), '_functval']))  
-

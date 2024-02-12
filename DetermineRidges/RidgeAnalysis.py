@@ -28,12 +28,11 @@ from sklearn.cluster import KMeans
 from scipy.spatial import distance
 
 # import functions to alter meshes  
-from Functions.EssentialMeshAlteration import find_vertices_within_radius,get_nearest_neighbor,create_label_submeshes 
+from Functions.EssentialMeshAlteration import find_vertices_within_radius,get_nearest_neighbor,create_label_submeshes, get_submesh_quality
 from Functions.EssentialLabelAlteration import get_unique_labels,get_uniquelabel_vertlist,get_labels_IoU_max,get_labels_IoU,label_vertices
 
 # import functions to export pline file
 from Functions.PlineExport import exp_pline, exp_pline_funcvals
-
 
 from Functions.BasicMSII1D import angle_between_vectors
 
@@ -89,14 +88,7 @@ class LabelledMesh (Mesh):
     def read_label_as_dict (self):
 
         """
-        Function to load a ply file and the txt label file to the LabelledMesh object
-        
-        Args:
-            path (str): String representing the path to the file.
-            id (str): String representing the file id of the ply file.
-            preprocessed (str): String representing the preprocessing step of the ply file.    
-            label_name (str): name of the label file        
-            exp_path (str): String representing the export folder where to save all derived data.                
+        Imports the label txt file of an ply file            
         """        
 
         # path to the segmentation
@@ -112,8 +104,8 @@ class LabelledMesh (Mesh):
     def extract_ridges (self):   
 
         """
-        Function to get the ridges and centroids of the labelled areas on the surface of the labeledMesh object.
-        The goal is extracting the outline vertices of each label.
+        Detects ridges and centroids of labelled areas on the surface of the labeledMesh object.
+        Goal is extracting the outline vertices of each label.
         """
 
         # Create a dictionary of all vertices (keys), which have more than 1 neighbouring label and a list of all neighbouring vertices with the 
@@ -129,7 +121,6 @@ class LabelledMesh (Mesh):
                                             }
 
         # Create a dictionary of all labels (keys) and a set of vertices with the same label (values), which belong to the ridge_neighbour_shared_label dictionary
-
         self.label_outline_vertices =   {label: {r_vert
                                                     for r_vert in self.ridge_neighbour_shared_label.keys()
                                                     if self.dict_label[r_vert] == label
@@ -150,12 +141,58 @@ class LabelledMesh (Mesh):
 
                                         for label,values in self.label_outline_vertices.items()            
                                     }    
-        # Calculate centroids of all labels        
-        self.get_centroids()
+
+    # preprocessing 
+    def prep_ridges(self):
+
+        """
+        Prepares ridge-related structures for further processing.
+
+        This method performs several operations related to 'ridges' in the context of lithic artifacts as border between adjacent scars.
+        Also creates dictionary of neighboring labels and derives from that a set of edges for a graph representation.                 
+        
+        Attributes:
+            ridge_neighbour_notshared_label (dict): dictionary with vertices (keys) and neighboring vertices with different label (values).
+
+            neighbouring_labels (dict): dictionary with labels (keys) and neighboring labels (values). 
+
+            neighbouring_labels_set (set): A set of tuples (edges) of neighboring labels, creating a set of bidiretional edges for graph. 
+        """
+
+        # identifies border vertices between labels.
+        self.ridge_neighbour_notshared_label = {key: {self.dict_label[v] for v in self.vertex_neighbors_dict[key] + [self.dict_label[key]] 
+                                                if self.dict_label[key] != self.dict_label[v]}
+                                                
+                                        
+                                        for key, v in enumerate(self.vertices) 
+                                                if len(np.unique([self.dict_label[v] 
+                                                    for v in self.vertex_neighbors_dict[key]] + [self.dict_label[key]])) > 1
+                                            }                                                
+
+        # identifies neighboring labels
+        self.neighbouring_labels =   {ul: {self.dict_label[r_vert]
+                                                for r_vert,labels in self.ridge_neighbour_notshared_label.items()
+                                                for label in labels
+                                                if self.dict_label[r_vert] != label and 
+                                                ul == label
+                                            }
+
+                                        for ul in self.unique_labels
+                                    }
+        
+        # create set of neighboring labels
+        self.neighbouring_labels_set =   {(label,n_l)
+                                            for label,neigh_labels in self.neighbouring_labels.items()
+                                                for n_l in neigh_labels
+                                        }           
         
     def get_centroids (self):
-        # Create a dictionary of all vertices (keys), which have more than 1 neighbouring label and a list of all neighbouring vertices with the 
-        # same label 
+
+        """
+        Creates a dictionary containing labels (key) and centroid of label outline vertices (values). 
+        """
+
+        # 
         self.centroids =    {label:np.mean([self.vertices[v] 
                                                 for v in verts],axis=0)
 
@@ -163,6 +200,15 @@ class LabelledMesh (Mesh):
                             }
 
     def get_NNs (self):
+
+        """
+        Creates two dictionaries of containing both labels (keys) and 
+
+            -   nearest neighbor of the label centroid to complete mesh or 
+            -   nearest neighbor of the label centroid to its label submesh 
+                
+            as vertex coordinates (values).
+        """
 
         # Nearest neighbour (NN) from label centroid to submesh        
         self.NNs_to_mesh = {label: get_nearest_neighbor(self.tri_mesh,centroid)
@@ -176,13 +222,28 @@ class LabelledMesh (Mesh):
         self.NNs_to_submeshes = {label: get_nearest_neighbor(self.submeshes[label][0],centroid)
                                 
                                     for label, centroid in self.centroids.items()
-                                }    
+                                } 
+
+    def get_NNs_ids (self):
+
+        """
+        Creates a dictionary containing labels (key) and nearest neighbor to label centroid as vertex id (values). 
+        """
+
+        # Nearest neighbour (NN) from label centroid to submesh        
+        self.NNs_ids = {} 
+                                
+        for label, centroid in self.centroids.items():
+
+            _,index = self.tri_mesh.kdtree.query(centroid)
+
+            self.NNs_ids [label] = index
 
     ## handelling of labelfile
     def get_label_submeshes (self):
 
         """
-        Split mesh in submeshes according to imported labels.
+        Splits mesh in submeshes according to imported labels.
         """        
 
         labels = get_uniquelabel_vertlist (self.dict_label)
@@ -253,16 +314,7 @@ class LabelledMesh (Mesh):
                                                             'cl',
                                                             str(clust)]),
                                                     '_labels']))
-
-    def create_manual_edges(self):
-
-        manual_Edges = manualEdges()
-        manual_Edges.import_edges(self.path,self.id)
-
-        self.manual_edges = manual_Edges.manual_edges
-
-        
-
+       
     # create meshes for exporting
     ## ridges mesh
     def create_ridges_mesh(self):
@@ -294,6 +346,24 @@ class LabelledMesh (Mesh):
         nodes_list = [create_node_sphere (self.centroids [node],radius) for node in nodes]
 
         self.nodes_mesh = trimesh.util.concatenate(nodes_list)
+
+    ## get mean quality of submeshes 
+    def get_submeshes_quality_mean (self):
+
+        self.vertlist = get_uniquelabel_vertlist (self.dict_label)
+
+        self.get_quality ()
+
+        self.submeshes_quality = {label: get_submesh_quality(self.quality,vertlist)
+                                    for label,vertlist in self.vertlist.items()
+                                }
+
+        submeshes_quality_mean = {label:np.mean(vals)
+                    for label,submesh in self.submeshes_quality.items() 
+                        for vals in submesh.values()
+                }
+        
+        return submeshes_quality_mean
 
 # creates multiple graph models for analysing the ridges
 class PolylineGraphs (LabelledMesh):
@@ -331,42 +401,22 @@ class PolylineGraphs (LabelledMesh):
         self.load_labelled_mesh (path, id, preprocessed, label_name, exp_path)
 
         self.extract_ridges()
+        # create node coordinates
+        self.get_centroids()        
 
         self.get_NNs()
-
-    # preprocessing 
-    def prep_ridges(self):
-
-
-        self.ridge_neighbour_notshared_label = {key: {self.dict_label[v] for v in self.vertex_neighbors_dict[key] + [self.dict_label[key]] 
-                                                if self.dict_label[key] != self.dict_label[v]}
-                                                
-                                        
-                                        for key, v in enumerate(self.vertices) 
-                                                if len(np.unique([self.dict_label[v] 
-                                                    for v in self.vertex_neighbors_dict[key]] + [self.dict_label[key]])) > 1
-                                            }                                                
-
-        # Create a dictionary of all labels (keys) and a set of vertices with the same label (values), which belong to the ridge_neighbour_shared_label dictionary
-
-        self.neighbouring_labels =   {ul: {self.dict_label[r_vert]
-                                                for r_vert,labels in self.ridge_neighbour_notshared_label.items()
-                                                for label in labels
-                                                if self.dict_label[r_vert] != label and 
-                                                ul == label
-                                            }
-
-                                        for ul in self.unique_labels
-                                    }
     
-        
-        self.neighbouring_labels_set =   {(label,n_l)
-                                            for label,neigh_labels in self.neighbouring_labels.items()
-                                                for n_l in neigh_labels
-                                        }       
               
-    def polyline_to_nx (self):
+    def edges_to_polygraphs (self):
 
+        """
+        Converts outline edges of all labels to separete graphs in a dictionary.
+
+        Attributes:
+            polygraphs (dict): dictionary of labels (keys) and their graphs of all outline vertices (values). 
+
+        """   
+    
         self.polygraphs = {}
 
         for label,values in self.label_outline_edges.items():
@@ -384,6 +434,16 @@ class PolylineGraphs (LabelledMesh):
         # self.polygraphs = polygraphs
 
     def polygraphs_to_polylines(self):
+
+        """
+        Converts polygraphs to polylines and identifies labels without cycles.
+
+        Attributes:
+            polylines (dict): dictionary containing labels (keys) and polylines structures derived from the polygraphs.
+            no_polyline (list): A list of labels for which no closed polyline (cycle) could be identified.
+            label_outline_vertices (dict): A dictionary from which labels with no cycles are removed.
+
+        """     
 
         self.polylines = {}
 
@@ -419,17 +479,33 @@ class PolylineGraphs (LabelledMesh):
 
             i += 1
 
-    def get_connected_components (self):
-        
+    def get_connected_components(self):
+        """
+        Identifies and stores connected components in the graph_polyline.
+
+        Attributes:
+            ccs (list): list of vertices representing a connected component in the graph_polyline.
+        """
+
         connected_components = nx.connected_components(self.graph_polyline)
 
-        self.ccs = [list(cc)
-                        for cc in connected_components]
+        self.ccs = [list(cc) for cc in connected_components]
 
-    # preparing data for creating a pline 
-
+    # preparing data for creating a pline text file 
     ## collecting the data necessary to create the header 
     def create_dict_mesh_info(self):
+
+        """
+        Creates a dictionary with basic information about the mesh.
+
+        Attributes:
+            dict_mesh_info (dict): A dictionary containing:
+                - 'Mesh': ID of the mesh.
+                - 'Vertices': number of vertices of the mesh.
+                - 'Faces':  number of faces of the mesh.
+                - 'Polylines': number of polylines in the polyline file.
+
+        """
 
         self.dict_mesh_info =   {
                                 'Mesh' :    self.id,
@@ -440,6 +516,14 @@ class PolylineGraphs (LabelledMesh):
     
     ## collecting coordinates and normals of polyline vertices data necessary 
     def create_normals_vertices (self):
+
+        """
+        Collects coordinates and normals of polyline vertices.
+
+        Attributes:
+            pline_vertices (dict): dictionary containing vertex indices of all vertices belonging to a polyline (keys) and their coordinates (values).
+            pline_normals (dict): dictionary containing vertex indices of all vertices belonging to a polyline (keys) and their normals (values).
+        """        
         
         self.pline_vertices = {}
         self.pline_normals = {}
@@ -452,6 +536,16 @@ class PolylineGraphs (LabelledMesh):
                  
     def prepare_polyline (self):
 
+        """
+        Prepares a dictionary with information for each polyline.
+
+        Attributes:
+            dict_plines (dict): dictionary containing polyline indices (keys), and a nested dictionary containing: 
+                'label_id': label of polyline.
+                'vertices': vertices belonging to polyline.
+                'vertices_no': number of vertices of polyline.
+        """        
+
         self.dict_plines = {n:{   
                                 'label_id':self.polygraphs[n].nodes[polyline[0]]['label'],
                                 'vertices':  polyline,
@@ -459,6 +553,43 @@ class PolylineGraphs (LabelledMesh):
                                 }
                                     for n,polyline in self.polylines.items()
                                 }     
+        
+
+    # @timing
+    # def ridge_pairs(self):
+
+
+    #     self.ridges_pairs = {}
+    #     self.ridges_pairs_max = {}        
+    #     self.ridges_pairs_min = {} 
+
+    #     for edge in self.neighbouring_labels_set:
+    #         if (edge[1],edge[0]) not in self.ridges_pairs:
+
+                
+    #             try:
+
+    #                 difference = self.mean_segments_funv[(edge[0],edge[1])] - self.mean_segments_funv[(edge[1],edge[0])]
+
+    #                 self.ridges_pairs [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
+    #                                                         'bigger_smaller': np.sign(difference), 
+    #                                                         'difference' : np.absolute(difference)}
+                    
+    #                 difference_max = self.mean_maxsegments_funv[(edge[0],edge[1])] - self.mean_maxsegments_funv[(edge[1],edge[0])]
+
+    #                 self.ridges_pairs_max [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
+    #                                                         'bigger_smaller': np.sign(difference_max), 
+    #                                                         'difference' : np.absolute(difference_max)}
+                    
+
+    #                 difference_min = self.mean_minsegments_funv[(edge[0],edge[1])] - self.mean_minsegments_funv[(edge[1],edge[0])]
+
+    #                 self.ridges_pairs_min [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
+    #                                                         'bigger_smaller': np.sign(difference_min), 
+    #                                                         'difference' : np.absolute(difference_min)}
+
+    #             except:
+    #                 continue        
 
     def export_pline(self):
 
@@ -469,16 +600,28 @@ class PolylineGraphs (LabelledMesh):
         exp_pline(self.path, self.id, self.dict_mesh_info, self.dict_plines, self.pline_vertices, self.pline_normals)
 
     def export_pline_funcvals(self,
-                              funcvals,
-                              var_name):
-        """       
-        Export of Pline function values as txt file according to the GigaMesh Polyline Standard.
-        """        
+                        funcvals: dict,
+                        var_name: str):
+        """
+        Exports polyline function values as a text file following the GigaMesh Polyline Standard.
+
+        Args:    
+            funcvals (dict): vertex:functionvalue dictionary, e.g. MSII curvature
+            var_name (str): Name of the passed function value, e.g. 'MSII'.
+        """   
 
         exp_pline_funcvals(self.path, self.id, self.dict_mesh_info, funcvals, var_name)
 
     # segmentate polyline 
     def polineline_segmenting(self):
+
+        """
+        Segments each polyline based on neighboring labels and assigns to edge.
+
+        Attributes:
+            segments (dict): dictionary consisting of edge tuples of labels (keys) and a nested dictionary. 
+                                This contains 'vertices' (key) and vertex ids belonging to segment (values).
+        """        
       
         self.segments = { 
                     (label,n_l):    
@@ -491,13 +634,25 @@ class PolylineGraphs (LabelledMesh):
                     if n_l in self.neighbouring_labels[label]
                 }     
 
-    def segment_pline_parameter (self,parameter):
+    def segment_pline_funct_val (self,
+                                 funct_val:dict):
+
+        """
+        Segments polylines and assigns function values to dictionary.
+
+        Args:
+            funct_val (dict): dictionary containing vertex ids (keys) and function values (values).
+
+        Attributes:
+            segments_funv (dict): dictionary consisting of edge tuples of labels (keys) and a nested dictionary. 
+                                This contains 'vertices' (key) and function values of vertices belonging to segment (values).        
+        """        
 
         self.polineline_segmenting () 
 
         self.segments_funv = { 
                     (label,n_l):    
-                        {'funct_vals':[ parameter[v]
+                        {'funct_vals':[ funct_val[v]
                                         for v in self.dict_plines[label]['vertices'] if n_l in self.ridge_neighbour_notshared_label[v]]}
 
                     for label,neigh_labels in self.neighbouring_labels.items()
@@ -505,7 +660,15 @@ class PolylineGraphs (LabelledMesh):
                     if n_l in self.neighbouring_labels[label]
                 }
 
-    def segment_to_ridgegraph(self):
+    def segment_to_graph(self):
+
+        """
+        Converts polyline segments into a ridge graph.
+
+        Attributes:
+            G_ridges (nx.Graph): graph representing the segments ('edges': segment ids, 
+                                'nodes': vertices, 'length': number of vertices)
+        """        
 
         self.G_ridges = nx.Graph()    
 
@@ -519,7 +682,23 @@ class PolylineGraphs (LabelledMesh):
             else:
                 continue
 
-    def get_directed_edges(self,ridge_pairs):
+    def get_directed_edges( self,
+                            ridge_pairs:dict):
+
+        """
+        Determines direction of edges based on differences between function values.
+
+        Args:
+            ridges_pairs (dict): dictionary containing edges as tuples (keys) and nested dictionary derived from mean segment values with 3 keys:
+                                    - 'paired_scar' :   reversed ordered edge (tuple)
+                                    - 'bigger_smaller': sign of difference. 
+                                    - 'difference':     difference between func values between vertices belonging to edge[0] and edge[1]. 
+                                                        Note: Due to the adjacency of labels, segments consist of borders of two labels at once. 
+                                     
+
+        Returns:
+            directed_edges (dict): dictionary of directed edges with their respective absolut differences.
+        """        
 
         directed_edges = dict( [(r1,values['difference'] )
                                         for r1,values in ridge_pairs.items() 
@@ -531,27 +710,48 @@ class PolylineGraphs (LabelledMesh):
         #                         for r1,values in ridge_pairs.items()}
         return directed_edges
 
-    def create_direct_ridgegraph(self,ridge_pairs):
+    def create_directed_ridgegraph(self,
+                                   ridge_pairs:dict):
+
+        """
+        Creates a directed ridge graph from ridge pairs.
+
+        Args:
+            ridges_pairs (dict): dictionary containing edges as tuples (keys) and nested dictionary derived from mean segment values with 3 keys:
+                                    - 'paired_scar' :   reversed ordered edge (tuple)
+                                    - 'bigger_smaller': sign of difference. 
+                                    - 'difference':     difference between mean func values between vertices belonging to edge[0] and edge[1]. 
+                                                        Note: Due to the adjacency of labels, segments consist of borders of two labels at once. 
+                                                         
+
+        Returns:
+            (nx.DiGraph): directed graph representing the ridge pairs with weights.
+        """        
 
         directed_edges = self.get_directed_edges(ridge_pairs)
         
-        directed_ridges = nx.DiGraph()
+        DiG_ridges = nx.DiGraph()
 
         for edge,difference in directed_edges.items():
-            directed_ridges.add_nodes_from(edge)
-            directed_ridges.add_edge(*edge,weight = difference)
+            DiG_ridges.add_nodes_from(edge)
+            DiG_ridges.add_edge(*edge,weight = difference)
 
-        return directed_ridges
+        return DiG_ridges
 
     def label_connections_nodes (self):
 
+        """
+        Creates labels for vertices belonging to the undirected representation of the scar-ridge graph model in 3D. 
+        """        
+
+        # creates label text file for the undirected models of the edges (connection) between the scars (nodes)
         label_vertices( self,
                         0,
                         self.connections_mesh.vertices,
-                        # [''.join([f"{edges[0]:02}",'0',f"{edges[1]:02}"]) for edges in self.G_ridges.edges],
                         [num for num,_ in enumerate(self.G_ridges.edges, 1)], 
                         '_connections')
 
+        # creates label text file for the undirected models of the scars (nodes)
         label_vertices( self, 
                         len(self.connections_mesh.vertices),
                         self.nodes_mesh.vertices,
@@ -560,23 +760,67 @@ class PolylineGraphs (LabelledMesh):
 
     def direct_ridgegraph(self):
 
+        """
+        Creates directed ridge graphs for different types of ridge pairs.
+
+        Constructs directed graphs for normal, maximum, and minimum ridge pairs.
+        
+        Attributes:
+            DiG_ridges (dict): dictionary of directed graphs (values) for different types (keys) of ridge pairs.
+                'min':      DiG_ridges based on the difference of the minimum function values between adjacent nodes.  
+                'normal':   DiG_ridges based on the difference of the mean function values between adjacent nodes.  
+                'max':      DiG_ridges based on the difference of the maximum function values between adjacent nodes.                                    
+
+        """        
+
         self.DiG_ridges = {}
+
+        self.DiG_ridges ['min']  = self.create_direct_ridgegraph(self.ridges_pairs_min)         
 
         self.DiG_ridges ['normal'] = self.create_direct_ridgegraph(self.ridges_pairs) 
 
         self.DiG_ridges ['max']  = self.create_direct_ridgegraph(self.ridges_pairs_max) 
 
-        self.DiG_ridges ['min']  = self.create_direct_ridgegraph(self.ridges_pairs_min) 
-   
-    def get_DiG_ridge_properties(self,graphname):       
+
+    def get_DiG_ridge_properties(self,
+                                 graphname:str):  
+
+        """
+        Retrieves basic properties of a specified directed ridge graph.
+
+        Args:
+            graphname (str): The name of the directed ridge graph type.
+
+        Attributes:
+            DiG_properties (dict): dictionary containing edges (keys) and basic properties ('degree','degree_weigthed','betweenness_centrality') 
+            of the undirected ridge graph (values). 
+        """             
 
         self.DiG_properties = get_basic_graph_properties(self.DiG_ridges [graphname])
 
     def get_G_ridge_properties(self):
 
+        """
+        Retrieves basic properties of the undirected ridge graph.
+
+        Attributes:
+            G_properties: dictionary containing edges (keys) and basic properties ('degree','degree_weigthed','betweenness_centrality') 
+            of the undirected ridge graph (values).
+        """        
+
         self.G_properties = get_basic_graph_properties(self.G_ridges)
 
     def export_DiG_node_properties(self):
+
+        """
+        Exports the node properties of the directed ridge graph.
+
+        This method extracts and exports various node properties (degree, weighted degree, betweenness centrality) of the directed 
+        ridge graphs to text files.
+
+        Note:
+            - Exports are saved with specific naming conventions based on the graph type and a radius parameter (`self.nrad`).
+        """        
 
         DiG_node_degree = {key:self.DiG_properties[val]['degree'] 
                            for key,val in self.dict_label.items() if val not in self.no_polyline}
@@ -595,6 +839,16 @@ class PolylineGraphs (LabelledMesh):
 
     def export_G_node_properties(self):
 
+        """
+        Exports the node properties of the directed ridge graph.
+
+        This method extracts and exports various node properties (degree, weighted degree, betweenness centrality) of the directed 
+        ridge graphs to text files.
+
+        Note:
+            - Exports are saved with specific naming conventions based on the graph type and a radius parameter (`self.nrad`).
+        """        
+
         G_node_degree = {key:self.G_properties[val]['degree'] 
                          for key,val in self.dict_label.items() if val not in self.no_polyline}
 
@@ -609,4 +863,3 @@ class PolylineGraphs (LabelledMesh):
         write_labels_txt_file (G_node_degree_weighted, ''.join([self.path, self.id, '_G-node_degree_weighted',str(self.nrad)]))    
         
         write_labels_txt_file (G_node_betweenness,''.join([self.path, self.id, '_G-node_betweenness',str(self.nrad)]))  
-

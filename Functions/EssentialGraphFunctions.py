@@ -1,12 +1,12 @@
 import networkx as nx
 
-def get_basic_graph_properties(graph):
+def get_basic_graph_properties(G):
 
-    dict_degree = dict(graph.degree)
+    dict_degree = dict(G.degree)
 
-    dict_degree_weigthed = dict(graph.degree(weight='weight'))    
+    dict_degree_weigthed = dict(G.degree(weight='weight'))    
 
-    dict_betweenness_centrality = nx.betweenness_centrality(graph, endpoints=True,normalized=True)
+    dict_betweenness_centrality = nx.betweenness_centrality(G, endpoints=True,normalized=True)
 
 
     properties = {edge:{'degree':dict_degree[edge], 

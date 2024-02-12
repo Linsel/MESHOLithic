@@ -111,7 +111,7 @@ class MSIIPline(PolylineGraphs):
         self.create_from_mesh(pline.path, pline.id,pline.dict_mesh_info,pline.dict_plines,pline.vertices,pline.normals)
 
 
-    def polygraphs_to_nx (self):
+    def polygraphs_to_graph (self):
 
         self.polygraphs = {}
 
@@ -370,7 +370,7 @@ class MSIIGraphs(MSIIPline):
         super().__init__()
 
     @timing
-    def segment_to_ridgegraph_MSII(self):
+    def segment_to_graph_MSII(self):
 
         self.G_ridges = nx.Graph()
 
@@ -421,6 +421,22 @@ class MSIIGraphs(MSIIPline):
     @timing
     def ridge_pairs(self):
 
+        """
+        Calculates ridge pairs and their differences in mean, max, and min segment values.
+
+        Attributes:
+            ridges_pairs (dict): dictionary containing edges as tuples (keys) and nested dictionary derived from mean segment values with 3 keys:
+                                    - 'paired_scar' :   reversed ordered edge (tuple)
+                                    - 'bigger_smaller': sign of difference. 
+                                    - 'difference':     difference between mean func values between vertices belonging to edge[0] and edge[1]. 
+                                                        Note: Due to the adjacency of labels, segments consist of borders of two labels at once. 
+                                                                                
+            ridges_pairs_max (dict): Similar to `ridges_pairs` but for maximum segment values.
+            ridges_pairs_min (dict): Similar to `ridges_pairs` but for minimum segment values.
+
+        """        
+
+
         self.ridges_pairs = {}
         self.ridges_pairs_max = {}        
         self.ridges_pairs_min = {} 
@@ -442,7 +458,6 @@ class MSIIGraphs(MSIIPline):
                     self.ridges_pairs_max [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
                                                             'bigger_smaller': np.sign(difference_max), 
                                                             'difference' : np.absolute(difference_max)}
-                    
 
                     difference_min = self.mean_minsegments_funv[(edge[0],edge[1])] - self.mean_minsegments_funv[(edge[1],edge[0])]
 
