@@ -32,3 +32,11 @@ def write_funval_header(file,funval):
     file.write("# | Format: index funval                                |\n")
     file.write("# +-----------------------------------------------------+\n")
 
+# FEATURE VECTORS
+
+def write_feature_vectors_header(file,fv):
+    file.write("# +-----------------------------------------------------+\n")
+    file.write("# | txt file with funvals ({})                            ".format(fv)[:-len(fv)] + "|\n")
+    file.write("# +-----------------------------------------------------+\n")
+    file.write("# | Format: index funval                                |\n")
+    file.write("# +-----------------------------------------------------+\n")

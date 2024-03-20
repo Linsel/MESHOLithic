@@ -142,31 +142,31 @@ def detect_retouches_iter (G: nx.Graph,
         iterations = 2    
 
 
-    G_retouch_edges = {0:{'G':simplify_graph (G,param,tresh,0), 
+    G_retouch_edges = {0:{'G':               simplify_graph (G,param,tresh,0), 
                           'retouched_edges': detect_retouches(G,param,tresh)}}          
 
     for i in range(1,iterations):
 
         G_retouch_edges [i] = {'G':               simplify_graph(G_retouch_edges[i-1]['G'],param,tresh,0), 
-                                 'retouched_edges': detect_retouches(G_retouch_edges[i-1]['G'],param,tresh)}
+                               'retouched_edges': detect_retouches(G_retouch_edges[i-1]['G'],param,tresh)}
 
     return G_retouch_edges
 
 
 
-    if iterations == None:
-        iterations = 2
+    # if iterations == None:
+    #     iterations = 2
 
-    G_sub_iter = {}
+    # G_sub_iter = {}
 
-    G_sub_iter [0] = G
+    # G_sub_iter [0] = G
 
-    i = 1
+    # i = 1
     
-    while i < iterations:
+    # while i < iterations:
 
-        G_sub_iter [i] = simplify_graph (G_sub_iter[i-1],param,tresh,high_low)
+    #     G_sub_iter [i] = simplify_graph (G_sub_iter[i-1],param,tresh,high_low)
         
-        i += 1
+    #     i += 1
 
-    return G_sub_iter
+    # return G_sub_iter

@@ -6,9 +6,9 @@ def submeshes_procedure (obj,**kwargs):
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
     labelname = kwargs ['labelname']
-    exp_path = kwargs ['exp_path'] 
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname,exp_path) 
+
+    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
 
     obj.get_quality()
 
@@ -22,9 +22,9 @@ def submeshes_properties_procedure (obj,**kwargs):
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
     labelname = kwargs ['labelname']
-    exp_path = kwargs ['exp_path'] 
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname,exp_path) 
+
+    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
 
     obj.get_quality()
 

@@ -1,0 +1,46 @@
+{'GMAO':{  
+	'name':'GMAO',
+	'procedure': 'GigaMesh', 
+	'stage':'',
+	'method':'',
+	'parameters':'',
+	'variables': '',                         
+	'processed':'_GMAO',
+	'metadata':['']},
+'GMCF':{ 'name':'GMCF',
+	'procedure': 'GigaMesh', 
+	'stage':'',
+	'method':'gigamesh-clean', 
+	'variables': {},             
+	'parameters':'-m "original, lithic"',
+	'processed':'_GMCF',
+	'metadata':['mesh_polish']},    
+'MSII':{'name':'MSII',
+	'procedure': 'GigaMesh', 
+	'stage':'',
+	'method':'gigamesh-featurevectors',
+	'variables': {	'r':1.00,
+			'n':4,
+			'v':256},                 
+	'parameters':'-r 1.00 -n 4 -l 256',
+	'processed':'_r1.00_n4_v256',
+	'metadata':['info','normal','surface','volume']},
+'CO_concavity':'name':'CO_concavity',
+	'procedure': 'MSII',
+        'method': 'CO_concavity',
+	'stage':'',
+	'method':'',
+	'parameters':'',
+	 'variables':{	  'graphname':'max',
+			  'diameter': 1.00,
+			  'parameter':'quality',
+			  'n_rad': 16}                        
+	'processed':'',
+	'labelname':'_scar-labels',
+	'metadata':['']
+
+
+
+}
+	
+	} 

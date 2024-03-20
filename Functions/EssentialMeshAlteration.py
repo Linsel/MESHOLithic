@@ -1,4 +1,6 @@
+from numpy import ndarray
 from util import *
+from scipy.spatial import cKDTree
 
 def find_vertices_within_radius(mesh: object, 
                                 start_vertex: np.ndarray, 
@@ -44,7 +46,8 @@ def metadata_label_array(   metadata: np.ndarray,
 
     return metadata_arr
 
-def get_nearest_neighbor(   mesh: object,
+def get_nearest_neighbor(   kdtree: cKDTree,
+                            vertices:np.ndarray,
                             point: np.ndarray) -> np.ndarray:
 
     """
@@ -59,15 +62,12 @@ def get_nearest_neighbor(   mesh: object,
 
         
     """        
-
-    # Build a KD-tree from the vertices
-    kdtree = mesh.kdtree
         
     # Query the kdtree for the nearest neighbor from the query point and get distance to NN + index of NN
     dist, index = kdtree.query(point)
 
     # Get nearest neighbor as coordinates
-    NN = mesh.vertices[index]
+    NN = vertices[index]
 
     return NN
 
@@ -81,7 +81,7 @@ def create_label_submeshes (mesh,labels):
         labels (dict): A dictionary containing unique_labels (keys) and vertex ID's (values).             
 
     Returns: 
-        submeshes (dict): A dictionary of submeshes of the original labelled mesh.
+        submeshes (dict): A dictionary of submeshes of the original labelled meshes.
 
     """    
     

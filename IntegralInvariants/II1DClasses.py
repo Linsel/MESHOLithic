@@ -26,7 +26,7 @@ from Functions.EssentialDecorators import timing
 # from IntegralInvariants.II1DFunctions import create_start_list,get_longest_outline,create_icospheres,get_all_crossingpoints
 
 # writing txt files
-from Functions.exportFiles.writeTxt import write_labels_txt_file
+from Functions.exportFiles.writeTxt import write_labels_txt_file,write_funvals_txt_file,write_feature_vectors_txt_file
 
 from Functions.PolylineGraph import create_start_list,create_polyline,line_sphere_intersection,get_cycle,get_longest_outline #,get_max_outline,get_connected_components,
 from Functions.BasicMSII1D import test_nodes_two_neigh,angle_between_vectors
@@ -47,8 +47,7 @@ class MSIIPline(PolylineGraphs):
     def __init__(   self,
                     path: str = None,
                     id: str = None,
-                    preprocessed: str = None,
-                    exp_path: str = None,                    
+                    preprocessed: str = None,                
                     dict_mesh_info: dict = None,
                     dict_plines: dict = None,
                     vertices: np.ndarray = None,
@@ -61,7 +60,6 @@ class MSIIPline(PolylineGraphs):
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing stage of the ply file.
-            exp_path (str): String representing the export folder where to save all derived data.
             dict_mesh_info (dict): Any metadata about the mesh.
             dict_plines (dict): Any data of the polylines.
             vertices (ndarray): Array of vertex locations with shape (n, 3).
@@ -78,8 +76,6 @@ class MSIIPline(PolylineGraphs):
             self.id = id
         if preprocessed is not None:
             self.preprocessed = preprocessed
-        if exp_path is not None:
-            self.exp_path = exp_path
         if dict_mesh_info is not None:
             self.dict_mesh_info = dict_mesh_info
         if dict_plines is not None:
@@ -256,7 +252,7 @@ class MSIIPline(PolylineGraphs):
 
         json_dump = json.dumps( self.polylinedata, 
                                 cls=NpEncoder)
-        with open('{0}{1}{2}_MSII_polylinedata.json'.format(self.path,self.exp_path,self.id), 'w') as fp:
+        with open('{0}{1}{2}_MSII_polylinedata.json'.format(self.path,self.id), 'w') as fp:
             json.dump(json_dump, fp)
 
     # extract from polylinedata
@@ -315,11 +311,21 @@ class MSIIPline(PolylineGraphs):
         self.polylinedata_angle()
 
         self.angle_feature_vector = {node:[list(angle['angle'])[0] for angle in  II.values()] for node, II in self.dict_angle.items()}
+        write_feature_vectors_txt_file (self.angle_feature_vector,
+                                        '_'.join([self.path, self.id,'']),
+                                        'angle-vector-nrad{:02d}.txt'.format(self.nrad)) 
         
         self.max_angle = {node: max(angle_list, key=abs) for node, angle_list in self.angle_feature_vector.items()}
+        write_funvals_txt_file (self.max_angle,
+                                '_'.join([self.path, self.id,'']),
+                                'max-angle-vector-nrad{:02d}.txt'.format(self.nrad))
 
         self.distance_feature_vector = {node:[dist['dist_total'] for dist in II.values()] for node, II in self.dict_dist.items()}
+        write_feature_vectors_txt_file (self.distance_feature_vector,
+                                        '_'.join([self.path, self.id,'']),
+                                        'distance-vector-nrad{:02d}.txt'.format(self.nrad)) 
 
+        
     # generate dictioaries for exporting angle as function values
     @timing    
     def select_radius_angle (self,radius):
@@ -501,12 +507,10 @@ class MSIIChaineOperatoire (MSIIGraphs):
         self.ridges_arrows_mesh = trimesh.util.concatenate([self.arrows_mesh,self.nodes_mesh,self.ridges_mesh])        
 
         self.ridges_arrows_mesh.export(''.join ([self.path, 
-                                            self.id,
-                                            '_'.join([''.join(['r',str(self.radii[self.nrad])]),
-                                                      ''.join(['MSIIlinks',str(graphname)]),
-                                                      '-'.join([''.join(['r',]), ''.join(['c',])])]),                                          
-                                            '.ply']),
-                                            file_type='ply')
+                                                 self.id,
+                                                 '-'.join(['_MSII','links',str(graphname),'r{}'.format(str(self.radii[self.nrad]))]),                                       
+                                                 '.ply']),
+                                                 file_type='ply')
 
     # edge width scaled by edge weight 
     def create_rotated_scaled_arrow (self, edge, DiG):
@@ -572,6 +576,17 @@ class MSIIChaineOperatoire (MSIIGraphs):
                 self.nodes_mesh.vertices,
                 self.centroids.keys(),
                 '_nodes')
+        
+    def export_max_func_val (self,func_val_name):    
+
+        write_labels_txt_file ( self.max_func_val, 
+                                ''.join ([  self.path, 
+                                            self.id,
+                                            '_'.join([  '',
+                                                        func_val_name,
+                                                        'labels'])
+                                        ])
+                                )  
 
     def export_chaine_operatoire_labels (self,label_dict):
 

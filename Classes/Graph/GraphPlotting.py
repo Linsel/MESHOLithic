@@ -46,7 +46,7 @@ class ChaineOperatoire (PolylineGraphs):
             self.G_ridges.add_nodes_from(edge)
             self.G_ridges.add_edge(*edge)
 
-    def direct_ridgegraph(self,):
+    def direct_ridgegraph(self):
 
         self.DiG_manual = nx.DiGraph()
 
@@ -80,17 +80,13 @@ class ChaineOperatoire (PolylineGraphs):
                                                         self.nodes_mesh,
                                                         self.ridges_mesh])        
         
-        self.ridges_arrows = trimesh.util.concatenate([ self.arrows_mesh,
-                                                self.nodes_mesh,
-                                                self.ridges_mesh]) 
 
         self.ridges_arrows.export(''.join ([self.path, 
                                             self.id,
                                             self.edge_name,
-                                            '_ridges_arrows', 
+                                            '_ridges-arrows', 
                                             '.ply']),
-                                            file_type='ply')
-        
+                                            file_type='ply')       
 
   
     def create_arrows_mesh (self, 
@@ -218,13 +214,13 @@ class ChaineOperatoire (PolylineGraphs):
                                                     self.id, 
                                                     self.preprocessed,
                                                     self.edge_name,
-                                                    '_label']))
+                                                    '-label']))
 
         write_labels_txt_file (labels_dict,''.join([self.path, 
                                                     self.id, 
                                                     self.preprocessed,
                                                     self.edge_name,
-                                                    '_label'])) 
+                                                    '-label'])) 
 
 class GraphEvaluation (PolylineGraphs):
 
@@ -349,11 +345,11 @@ class GraphEvaluation (PolylineGraphs):
 
     def export_graph_model_labels (self,label_dict,para_name):
 
-        write_labels_txt_file (label_dict,''.join([self.path, self.id, '_', para_name, '_label'])) 
+        write_labels_txt_file (label_dict,''.join([self.path, self.id, '_', para_name, '-label'])) 
 
     def export_graph_model_functvals (self,label_dict):
 
-        write_labels_txt_file (label_dict,''.join([self.path, self.id, str(self.nrad), '_functval']))         
+        write_labels_txt_file (label_dict,''.join([self.path, self.id, '_', str(self.nrad), '-functval']))         
   
     def segment_pline_manual(self):
        

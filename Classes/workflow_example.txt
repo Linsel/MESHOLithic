@@ -1,0 +1,42 @@
+
+path: /home/linsel/Documents/PhD/Data/Cologne
+subfolder: 'Cologne_2022'
+
+Workflow: {1:{'name': 'GMAO', 'class': 'GigaMesh', 'stage': 1, 'method': '', 'parameters': '', 'variables': '', 'processed': '_GMAO', 'metadata': ['']}
+2:{'name': 'GMCF', 'class': 'GigaMesh', 'stage': 2, 'method': 'gigamesh-clean', 'variables': {}, 'parameters': '-m "original, lithic"', 'processed': '_GMCF', 'metadata': ['mesh_polish']}
+3:{'name': 'MSII', 'class': 'GigaMesh', 'stage': 3, 'method': 'gigamesh-featurevectors', 'variables': {'r': 1.0, 'n': 4, 'v': 256}, 'parameters': '-r 1.00 -n 4 -l 256', 'processed': '_r1.00_n4_v256.volume', 'metadata': ['info', 'normal', 'surface', 'volume']}}
+
+
+{1:{'name': 'GMAO', 'class': 'GigaMesh', 'stage': 1, 'method': '', 'parameters': '', 'variables': '', 'processed': '_GMAO', 'metadata': ['']}
+2:{'name': 'GMCF', 'class': 'GigaMesh', 'stage': 2, 'method': 'gigamesh-clean', 'variables': {}, 'parameters': '-m "original, lithic"', 'processed': '_GMCF', 'metadata': ['mesh_polish']},
+3:{'name': 'MSII', 'class': 'GigaMesh', 'stage': 3, 'method': 'gigamesh-featurevectors', 'variables': {'r': 1.0, 'n': 4, 'v': 256}, 'parameters': '-r 1.00 -n 4 -l 256', 'processed': '_r1.00_n4_v256.volume', 'metadata': ['info', 'normal', 'surface', 'volume']},
+4:{"name": "CO_concavity", "class": "MSII", "method": "", "stage": "", "parameters": "", "variables": {"graphname": "max", "diameter": 1.0, "parameter": "quality", "n_rad": 16, "preprocessed":""}, "processed": "", "labelname": "_scar-labels", "metadata": [""]}}
+
+
+
+
+
+{1:{'name': 'GMAO', 'class': 'GigaMesh', 'stage': 1, 'method': '', 'parameters': '', 'variables': '', 'processed': '_GMAO', 'metadata': ['']}
+2:{'name': 'GMCF', 'class': 'GigaMesh', 'stage': 2, 'method': 'gigamesh-clean', 'variables': {}, 'parameters': '-m "original, lithic"', 'processed': '_GMCF', 'metadata': ['mesh_polish']},
+3:{'name': 'MSII', 'class': 'GigaMesh', 'stage': 3, 'method': 'gigamesh-featurevectors', 'variables': {'r': 1.0, 'n': 4, 'v': 256}, 'parameters': '-r 1.00 -n 4 -l 256', 'processed': '_r1.00_n4_v256.volume', 'metadata': ['info', 'normal', 'surface', 'volume']},
+4:{'stage':4,'class':'MSII_CO','name':'MSII','method':'MSII','variables':{'labelname':'scar-labels',"graphname": "max", "diameter": 1.0, "parameter": "quality", "n_rad": 16,'preprocessed':''}}}
+
+
+
+path: /home/linsel/Documents/PhD/Data/Cologne
+subfolder: 'Cologne_2022_ANNO'
+
+{'name': 'MEAS', 'class': '', 'stage': 0, 'method': '', 'variables': {}, 'parameters': '', 'processed': '', 'metadata': []}
+{'name': 'GMCF', 'class': '', 'stage': 1, 'method': '', 'variables': {}, 'parameters': '', 'processed': '_GMCF', 'metadata': []}
+{'name': 'ANNO', 'stage': 2, 'class': '', 'method': '', 'parameters': '', 'variables': '', 'processed': '_GMCF_c', 'metadata': ['']}
+{'name':'LABL','stage':3, 'class': 'transform_labelledmesh','method': 'ridge_color_to_scar_labels','parameters':'','variables':{'tresh': 20,'ending': '.ply'},'processed': '_GMCF_c','metadata':['_CC-labels','_scar-labels']}
+
+
+
+################
+
+1:{'name': 'GMCF', 'class': 'GigaMesh', 'stage': 1, 'method': 'gigamesh-clean', 'variables': {}, 'parameters': '-m "original, lithic"', 'processed': '_GMCF', 'metadata': ['mesh_polish']},
+2:{'name': 'MSII', 'class': 'GigaMesh', 'stage': 2, 'method': 'gigamesh-featurevectors', 'variables': {'r': 1.0, 'n': 4, 'v': 256}, 'parameters': '-r 1.00 -n 4 -l 256', 'processed': '_r1.00_n4_v256.volume', 'metadata': ['info', 'normal', 'surface', 'volume']}
+
+
+{0: {'name': 'MEAS', 'class': '', 'stage': 0, 'method': '', 'variables': {}, 'parameters': '', 'processed': '', 'metadata': []}, 1: {'name': 'GMCF', 'class': '', 'stage': 1, 'method': '', 'variables': {}, 'parameters': '', 'processed': '_GMCF', 'metadata': []}, 2: {'name': 'ANNO', 'stage': 2, 'class': '', 'method': '', 'parameters': '', 'variables': '', 'processed': '_GMCF', 'metadata': ['']}, 3: {'name': 'LABL', 'stage': 3, 'class': 'transform_labelledmesh', 'method': 'ridge_color_to_scar_labels', 'parameters': '', 'variables': {'tresh': 20, 'ending': '.ply'}, 'processed': '_GMCF_c', 'metadata': ['_CC-labels', '_scar-labels']}}

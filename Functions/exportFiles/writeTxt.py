@@ -5,7 +5,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
 from Functions.EssentialDecorators import timing
-from Functions.exportFiles.writeTxtHeader import write_labels_header,write_links_header,write_links_eval_header,write_funval_header
+from Functions.exportFiles.writeTxtHeader import write_labels_header,write_links_header,write_links_eval_header,write_funval_header,write_feature_vectors_header
 
 
 # LABELS
@@ -56,6 +56,8 @@ def write_links_eval_csv_file(label_dict, target_file):
         f.write(''.join([ str(' '.join([str(i) for i in index])),',',str(label),'\n']))        
 
 
+
+##############################################################
 # FUNCTION VALUES      
 
 ####
@@ -90,5 +92,21 @@ def write_funval_thresh_labels_txt_file(vert_dict, thresh, target_file):
             f.write(''.join([ str(index),' ',str(1),"\n"]))
         else:
             f.write(''.join([ str(index),' ',str(2),"\n"]))
-        
- 
+
+
+
+#################
+# writing feature vectors 
+
+
+
+@timing
+def write_feature_vectors_txt_file(fvvalue_dict, target_file,fvvalue):
+    
+    f = open(''.join([target_file, fvvalue]), "w")
+      
+    write_feature_vectors_header(f,fvvalue) 
+
+    # write featurevectors
+    for index,values in fvvalue_dict.items():
+        f.write(''.join([ str(index),' ',' '.join([str(val) for val in values]),"\n"]))

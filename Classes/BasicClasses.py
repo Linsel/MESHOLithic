@@ -31,12 +31,10 @@ class Mesh:
     Trimesh.Trimesh class.
     """
 
-
     def __init__( self,
                 path: str = None,
                 id: str = None,
                 preprocessed: str = None,
-                exp_path: str = None,
                 vertices: np.ndarray = None,
                 faces: np.ndarray = None,
                 normals: np.ndarray = None,
@@ -54,7 +52,6 @@ class Mesh:
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing stage of the ply file.
-            exp_path (str): String representing the export folder where to save all derived data.
             vertices (ndarray): Array of vertex locations with shape (n, 3).
             faces (ndarray): Array of triangular faces with shape (m, 3).
             normals (ndarray): Array of normal vectors for vertices with shape (n, 3).
@@ -72,8 +69,7 @@ class Mesh:
             self.id = id
         if preprocessed is not None:
             self.preprocessed = preprocessed
-        if exp_path is not None:
-            self.exp_path = exp_path
+
         if vertices is not None:
             self.vertices = vertices
         if faces is not None:
@@ -95,8 +91,7 @@ class Mesh:
     def load_ply(self, 
                 path: str = None,
                 id: str = None,
-                preprocessed: str = None,
-                exp_path: str = ''):
+                preprocessed: str = None):
 
         """
         Function to load a ply file to the Mesh object
@@ -105,19 +100,12 @@ class Mesh:
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing step of the ply file.
-            exp_path (str): String representing the export folder where to save all derived data.
         """
         
         # save all attributes 
         self.path = path
         self.id = id     
         self.preprocessed = preprocessed   
-        self.exp_path = exp_path
-
-        # create export folder
-        if os.path.isdir(path + exp_path) == False:
-            os.mkdir(path + exp_path)
-
         self.tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
 
         # Read the vertex data as array
@@ -352,7 +340,6 @@ class Pline:
         """        
 
         exp_pline(self.path, self.id, self.dict_mesh_info, self.dict_plines, self.vertices, self.normals)
-
 
     def export_pline_funcvals(self):
         """       

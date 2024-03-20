@@ -66,8 +66,7 @@ class LabelledMesh (Mesh):
                             path: str, 
                             id: str, 
                             preprocessed: str, 
-                            label_name: str, 
-                            exp_path: str = ''):
+                            label_name: str):
 
         """
         Function to load a ply file and the txt label file to the LabelledMesh object
@@ -76,10 +75,9 @@ class LabelledMesh (Mesh):
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing step of the ply file.    
-            label_name (str): name of the label file        
-            exp_path (str): String representing the export folder where to save all derived data.                
+            label_name (str): name of the label file                 
         """
-        self.load_ply(path, id, preprocessed, exp_path)
+        self.load_ply(path, id, preprocessed)
 
         self.label_name = label_name
         self.read_label_as_dict()       
@@ -211,7 +209,7 @@ class LabelledMesh (Mesh):
         """
 
         # Nearest neighbour (NN) from label centroid to submesh        
-        self.NNs_to_mesh = {label: get_nearest_neighbor(self.tri_mesh,centroid)
+        self.NNs_to_mesh = {label: get_nearest_neighbor(self.kdtree,self.vertices,centroid)
                                 
                                 for label, centroid in self.centroids.items()
                             }
@@ -235,7 +233,7 @@ class LabelledMesh (Mesh):
                                 
         for label, centroid in self.centroids.items():
 
-            _,index = self.tri_mesh.kdtree.query(centroid)
+            _,index = self.kdtree.query(centroid)
 
             self.NNs_ids [label] = index
 
@@ -248,8 +246,12 @@ class LabelledMesh (Mesh):
 
         labels = get_uniquelabel_vertlist (self.dict_label)
 
+        tri_mesh = trimesh.load(''.join([self.path, self.id, self.preprocessed, '.ply']))
+
         # Creates a dictionary of with a ridge point and the neighbours with the same label
-        self.submeshes = create_label_submeshes (self.tri_mesh,labels)
+        self.submeshes = create_label_submeshes (tri_mesh,labels)
+
+        del tri_mesh
 
     ######################
     # create two submeshes passed on kmeans-clustering 
@@ -278,8 +280,7 @@ class LabelledMesh (Mesh):
         write_labels_txt_file (clust_labels, ''.join ([ self.path, 
                                                         self.id,
                                                         '_'.join([  '',
-                                                                    'Kmeans',
-                                                                    'labels'])
+                                                                    'Kmeans-labels'])
                                                         ]))
 
     def kmeans_slice (self):
@@ -292,7 +293,11 @@ class LabelledMesh (Mesh):
 
         clust_labels = {ul:{i:self.dict_label[n] for i,n in enumerate(values)} for ul,values in clust_verts.items()}
 
-        submeshes = create_label_submeshes(self.tri_mesh,clust_verts)
+        tri_mesh = trimesh.load(''.join([self.path, self.id, self.preprocessed, '.ply']))
+
+        submeshes = create_label_submeshes(tri_mesh,clust_verts)
+
+        del tri_mesh
 
         for clust,submesh in submeshes.items():
             if submesh [0]:
@@ -313,7 +318,7 @@ class LabelledMesh (Mesh):
                                                     '-'.join(['Kmeans',
                                                             'cl',
                                                             str(clust)]),
-                                                    '_labels']))
+                                                    '-labels']))
        
     # create meshes for exporting
     ## ridges mesh
@@ -343,9 +348,9 @@ class LabelledMesh (Mesh):
     ## nodes mesh
     def create_nodes_mesh (self,nodes,radius):
 
-        nodes_list = [create_node_sphere (self.centroids [node],radius) for node in nodes]
+        self.nodes_list = [create_node_sphere (self.centroids [node],radius) for node in nodes]
 
-        self.nodes_mesh = trimesh.util.concatenate(nodes_list)
+        self.nodes_mesh = trimesh.util.concatenate(self.nodes_list)
 
     ## get mean quality of submeshes 
     def get_submeshes_quality_mean (self):
@@ -384,8 +389,7 @@ class PolylineGraphs (LabelledMesh):
                         path: str, 
                         id: str, 
                         preprocessed: str, 
-                        label_name: str, 
-                        exp_path: str = ''):
+                        label_name: str):
     
         """
         Function to prepare a polygraph from labbeled mesh.
@@ -394,11 +398,10 @@ class PolylineGraphs (LabelledMesh):
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing step of the ply file.    
-            label_name (str): name of the label file        
-            exp_path (str): String representing the export folder where to save all derived data.                
+            label_name (str): name of the label file                   
         """  
 
-        self.load_labelled_mesh (path, id, preprocessed, label_name, exp_path)
+        self.load_labelled_mesh (path, id, preprocessed, label_name)
 
         self.extract_ridges()
         # create node coordinates
@@ -555,41 +558,41 @@ class PolylineGraphs (LabelledMesh):
                                 }     
         
 
-    # @timing
-    # def ridge_pairs(self):
+    @timing
+    def ridge_pairs(self):
 
 
-    #     self.ridges_pairs = {}
-    #     self.ridges_pairs_max = {}        
-    #     self.ridges_pairs_min = {} 
+        self.ridges_pairs = {}
+        self.ridges_pairs_max = {}        
+        self.ridges_pairs_min = {} 
 
-    #     for edge in self.neighbouring_labels_set:
-    #         if (edge[1],edge[0]) not in self.ridges_pairs:
+        for edge in self.neighbouring_labels_set:
+            if (edge[1],edge[0]) not in self.ridges_pairs:
 
                 
-    #             try:
+                try:
 
-    #                 difference = self.mean_segments_funv[(edge[0],edge[1])] - self.mean_segments_funv[(edge[1],edge[0])]
+                    difference = self.mean_segments_funv[(edge[0],edge[1])] - self.mean_segments_funv[(edge[1],edge[0])]
 
-    #                 self.ridges_pairs [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
-    #                                                         'bigger_smaller': np.sign(difference), 
-    #                                                         'difference' : np.absolute(difference)}
+                    self.ridges_pairs [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
+                                                            'bigger_smaller': np.sign(difference), 
+                                                            'difference' : np.absolute(difference)}
                     
-    #                 difference_max = self.mean_maxsegments_funv[(edge[0],edge[1])] - self.mean_maxsegments_funv[(edge[1],edge[0])]
+                    difference_max = self.mean_maxsegments_funv[(edge[0],edge[1])] - self.mean_maxsegments_funv[(edge[1],edge[0])]
 
-    #                 self.ridges_pairs_max [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
-    #                                                         'bigger_smaller': np.sign(difference_max), 
-    #                                                         'difference' : np.absolute(difference_max)}
+                    self.ridges_pairs_max [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
+                                                            'bigger_smaller': np.sign(difference_max), 
+                                                            'difference' : np.absolute(difference_max)}
                     
 
-    #                 difference_min = self.mean_minsegments_funv[(edge[0],edge[1])] - self.mean_minsegments_funv[(edge[1],edge[0])]
+                    difference_min = self.mean_minsegments_funv[(edge[0],edge[1])] - self.mean_minsegments_funv[(edge[1],edge[0])]
 
-    #                 self.ridges_pairs_min [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
-    #                                                         'bigger_smaller': np.sign(difference_min), 
-    #                                                         'difference' : np.absolute(difference_min)}
+                    self.ridges_pairs_min [(edge[0],edge[1])] = {'paired_scar':(edge[1],edge[0]),
+                                                            'bigger_smaller': np.sign(difference_min), 
+                                                            'difference' : np.absolute(difference_min)}
 
-    #             except:
-    #                 continue        
+                except:
+                    continue        
 
     def export_pline(self):
 
@@ -775,11 +778,11 @@ class PolylineGraphs (LabelledMesh):
 
         self.DiG_ridges = {}
 
-        self.DiG_ridges ['min']  = self.create_direct_ridgegraph(self.ridges_pairs_min)         
+        self.DiG_ridges ['min']  = self.create_directed_ridgegraph(self.ridges_pairs_min)         
 
-        self.DiG_ridges ['normal'] = self.create_direct_ridgegraph(self.ridges_pairs) 
+        self.DiG_ridges ['normal'] = self.create_directed_ridgegraph(self.ridges_pairs) 
 
-        self.DiG_ridges ['max']  = self.create_direct_ridgegraph(self.ridges_pairs_max) 
+        self.DiG_ridges ['max']  = self.create_directed_ridgegraph(self.ridges_pairs_max) 
 
 
     def get_DiG_ridge_properties(self,

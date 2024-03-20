@@ -18,10 +18,9 @@ def undirected_graph_procedure (obj,**kwargs):
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
     labelname = kwargs ['labelname']
-    exp_path = kwargs ['exp_path'] 
 
     # Data import 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname,exp_path) 
+    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
     obj.extract_ridges()
 
     # get polylines
@@ -51,14 +50,13 @@ def graph_evaluation_procedure (obj,**kwargs):
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
     labelname = kwargs ['labelname']
-    exp_path = kwargs ['exp_path'] 
 
     # scales
     radius_scale = kwargs ['radius_scale'] 
     circumference_scale = kwargs ['circumference_scale'] 
 
     # Data import 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname,exp_path) 
+    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
     obj.extract_ridges()
 
     # get polylines
@@ -90,10 +88,9 @@ def graph_direct_parameter_procedure (obj,**kwargs):
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
     labelname = kwargs ['labelname']
-    exp_path = kwargs ['exp_path'] 
 
     # Data import 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname,exp_path) 
+    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
     obj.extract_ridges()
 
     # get polylines

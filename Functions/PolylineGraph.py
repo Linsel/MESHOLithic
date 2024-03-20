@@ -110,6 +110,9 @@ def get_longest_outline(G,origin,target):
 #     elif p1_d < p2_d:
 #         return p1
 
+#########################################################
+# MSII 1D
+
 def line_sphere_intersection(origin, target, sphere_center, sphere_radius):
 
     """
@@ -158,3 +161,132 @@ def get_cycle(G:nx.graph):
     rev_cycle = list(reversed(cycle))
 
     return cycle,rev_cycle
+
+
+#########################################################
+# CO Concavity
+
+def ridge_inside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
+
+    label_arr_mean = {  vert:{nei: float(np.mean(params,axis=0))
+                                for nei,params in neighs.items()
+                                    if dict_label[vert] == nei
+                                } 
+                          
+                            for values in label_arr.values() 
+                                for vert,neighs in values.items()
+
+                        }
+    pd.DataFrame.from_dict(label_arr_mean, orient='index').to_csv(  ''.join([path,
+                                                                    id,
+                                                                    preprocessed,
+                                                                    '-'.join(['_inside','mean','curv','r{}'.format(radius)]),
+                                                                    '.txt']), 
+                                                                    mode='w',
+                                                                    header=False, 
+                                                                    index=True,
+                                                                    sep=' ') 
+    
+    return label_arr_mean
+    
+def ridge_outside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
+
+    label_arr_mean = {  vert:{nei: float(np.mean(params,axis=0))
+                                for nei,params in neighs.items()
+                                    if dict_label[vert] != nei
+                                } 
+                          
+                            for values in label_arr.values() 
+                                for vert,neighs in values.items()
+
+                        }
+    pd.DataFrame.from_dict(label_arr_mean, orient='index').to_csv(  ''.join([path,
+                                                                    id,
+                                                                    preprocessed,
+                                                                    '-'.join(['_outside','mean','curv','r{}'.format(radius)]),
+                                                                    '.txt']), 
+                                                                    mode='w',
+                                                                    header=False, 
+                                                                    index=True,
+                                                                    sep=' ')  
+
+def get_vertices_in_radius (mesh:object,
+                            label_verts:dict,
+                            neighs: dict,
+                            dict_label: dict,
+                            radius:float,
+                            metadata: np.ndarray) -> dict:
+
+    kdtree = mesh.kdtree
+    vertices = mesh.vertices
+
+    label_arr = {}
+
+    for label,values in label_verts.items():
+
+        label_arr [label] = {}
+
+        for n,val in enumerate(values):
+
+            label_arr [label] [val] = {}
+
+            if neighs [val] == None:
+                neighs [val] = {label}
+
+            neighs [val].add(label)
+
+            # get nearest points 
+            indices_within_radius = kdtree.query_ball_point(vertices[val], radius)
+            # vertices_within_radius = vertices[indices_within_radius]        
+
+            for nei in neighs [val]:
+
+                arr = np.empty((metadata.shape[1],),float) 
+
+                for ind in indices_within_radius:
+
+                    if dict_label[ind] == nei:
+
+                        arr = np.vstack((arr, metadata[ind]))
+
+                label_arr [label] [val] [nei] = arr
+
+    return label_arr
+
+def get_label_mean( label_verts:dict,
+                    metadata: np.ndarray) -> dict:
+
+    label_dict = {}
+
+    for label,values in label_verts.items():
+
+        arr = np.empty((metadata.shape[1],),float) 
+
+        for val in values:
+
+            arr = np.vstack((arr, metadata[val]))
+
+        label_dict [label] = arr
+
+    return label_dict
+
+def filter_metadata (imp_metadata,parameters):
+
+    if len(parameters) > 1:
+        
+        metadata = np.column_stack((imp_metadata [para] for para in parameters))
+        
+        return metadata
+            
+    elif len(parameters) == 1:
+
+        metadata = np.array((imp_metadata [parameters[0]]))
+        metadata = metadata.reshape(metadata.shape[0],1)
+
+        return metadata
+    
+    else:
+        return
+  
+
+
