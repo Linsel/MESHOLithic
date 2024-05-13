@@ -35,10 +35,11 @@ def run_workflow (path,
     max_steps = max([v['stage'] for v in workflow.values()])
 
     export_workflow(path, folder, workflow, steps)
-    
+
     for n in range(last_step[0],max_steps):
 
         workflow_step (path,folder,workflow,n)
+
 
 def workflow_step (path,folder,workflow,n):
 
@@ -55,48 +56,70 @@ def workflow_step (path,folder,workflow,n):
 
     files = os.listdir(folder_path)
 
+
+    if workflow[next_step]['add_labels'] == True:
+
+        kwargs = {
+            'path':path, 
+            'folder':folder,
+            'newfolder':newfolder,
+            'filename':workflow[next_step]['labelname']}
+        
+        # add_labels(**kwargs)
+        label_paths = get_file_paths(**kwargs)
+        
+
+    if workflow[next_step]['add_links'] == True:
+
+        kwargs = {
+            'path':path, 
+            'folder':folder,
+            'newfolder':newfolder,
+            'filename':workflow[next_step]['linkname']}  
+                        
+        # add_links(**kwargs)
+        link_paths = get_file_paths(**kwargs)
+                
+
     for file in files:
-        try:
-            print ("Begin to process {}".format(file))
-            if file.endswith('ply'):
+        # try:
+        print ("Begin to process {}".format(file))
+        if file.endswith('ply'):
 
-                temp_kwargs = { 'path':folder_path,
-                                'id':file[:-4],
-                                'class':workflow[next_step]['class'],
-                                'method':workflow[next_step]['method'],
-                                'parameters': workflow[next_step]['parameters']}
+            temp_kwargs = { 'path':folder_path,
+                            'id':file[:-4],
+                            'class':workflow[next_step]['class'],
+                            'method':workflow[next_step]['method'],
+                            'parameters': workflow[next_step]['parameters']}
+            
+            temp_kwargs.update(workflow[next_step]['variables'])
+
+            if workflow[next_step]['add_labels'] == True:
+
+                print(label_paths)
+
+                temp_kwargs['labelfilepath'] = label_paths[file.split('_')[0]]
                 
-                temp_kwargs.update(workflow[next_step]['variables'])
 
-                if workflow[next_step]['add_labels'] == True:
+            if workflow[next_step]['add_links'] == True:
 
-                    kwargs = {
-                        'path':path, 
-                        'folder':folder,
-                        'newfolder':newfolder}
+                print(link_paths)
 
-                    add_labels(**kwargs)
+                temp_kwargs['linkfilepath'] = link_paths [file.split('_')[0]] 
+       
 
-                if workflow[next_step]['add_links'] == True:
+            procedures (**temp_kwargs)
 
-                    kwargs = {
-                        'path':path, 
-                        'folder':folder,
-                        'newfolder':newfolder}  
-                                  
-                    add_links(**kwargs)
-
-                procedures (**temp_kwargs)
-
-        except: 
-            print ("Something went wrong while calculating {}".format(file))
-            continue
+        # except: 
+            # print ("Something went wrong while calculating {}".format(file))
+            # continue
                 
+    if workflow[next_step]['method'] != '':
 
         newfolder = str("{}_{}_{}".format(  folder,
                                                 '{:02d}'.format(workflow[next_step]['stage']),
                                                 str(workflow[next_step]['name'])))
-        
+            
         create_folder(path,folder,newfolder)
 
         new_path = '/'.join([path,folder,
@@ -121,6 +144,3 @@ def workflow_step (path,folder,workflow,n):
                 if file_split[len(file_split)-2] in workflow[next_step]['metadata']:
 
                     os.rename('/'.join([new_path,file]), '/'.join([metapath,file]))
-
-
-

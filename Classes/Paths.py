@@ -52,7 +52,6 @@ class Paths (Pline):
         if selected_edges is not None:
             self.selected_edges = selected_edges      
 
-
     def shortest_paths(self):
 
         """
@@ -68,12 +67,12 @@ class Paths (Pline):
 
 
         """        
-
+        
         # edges without duplication
-        edges = self.tri_mesh.edges_unique
+        edges = self.edges_unique
 
         # the actual length of each unique edge
-        length = self.tri_mesh.edges_unique_length
+        length = self.edges_unique_length
 
         # create the graph with edge attributes for length
         g = nx.Graph()
@@ -94,7 +93,7 @@ class Paths (Pline):
         # run the shortest path query using length for edge weight
         for key,ids in shortest_paths.items():
     
-            shortest_paths_dist [key] = np.sum([distance.euclidean(self.tri_mesh.vertices[ids[n]],self.tri_mesh.vertices[ids[n+1]]) for n in range(len(ids)-1)])
+            shortest_paths_dist [key] = np.sum([distance.euclidean(self.vertices[ids[n]],self.vertices[ids[n+1]]) for n in range(len(ids)-1)])
 
 
         # for source,target in self.selected_edges:
@@ -107,6 +106,7 @@ class Paths (Pline):
         self.shortest_paths = shortest_paths
 
         self.shortest_paths_dist = shortest_paths_dist
+        
 
     def create_edges_submeshes (self,dict_label):
 

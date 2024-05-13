@@ -56,7 +56,7 @@ class MSIIPline(PolylineGraphs):
         """
         MSIIPline
 
-        Args:
+        Attributes:
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing stage of the ply file.
@@ -92,6 +92,19 @@ class MSIIPline(PolylineGraphs):
                          dict_plines,
                          vertices,
                          normals):
+        
+        """
+        Import values referencing to the labelled mesh.
+
+        Attributes:
+            path (str): String representing the path to the file.
+            id (str): String representing the file id of the ply file.
+            preprocessed (str): String representing the preprocessing stage of the ply file.
+            dict_mesh_info (dict): Any metadata about the mesh.
+            dict_plines (dict): Any data of the polylines.
+            vertices (ndarray): Array of vertex locations with shape (n, 3).
+            normals (ndarray): Array of normal vectors for vertices with shape (n, 3).        
+        """
 
         self.path = path 
         self.id = id
@@ -261,45 +274,45 @@ class MSIIPline(PolylineGraphs):
         self.list_angle = []
         list_angle = []
         self.dict_angle = {}    
-        for label,values in self.polylinedata.items():
+        for values in self.polylinedata.values():
             for node, vals in values.items():        
                 self.dict_angle[node] = {}
-                for dia,v in vals.items():
-                    self.dict_angle[node][dia] = {}
+                for rad,v in vals.items():
+                    self.dict_angle[node][rad] = {}
 
                     try:
                         angle = angle_between_vectors(   list(v['down_stream']['II1D_crsp']),
                                                     self.vertices[node],
                                                     list(v['up_stream']['II1D_crsp']))
-                        self.dict_angle[node][dia] = {'angle': angle}
-                        list_angle.append([node,dia,angle[0]])
-                        self.list_angle.append(['{} {} {}'.format(node,dia,angle[0])])
+                        self.dict_angle[node][rad] = {'angle': angle}
+                        list_angle.append([node,rad,angle[0]])
+                        self.list_angle.append(['{} {} {}'.format(node,rad,angle[0])])
                         
                     except:
-                        self.dict_angle[node][dia] = { 'angle': (0,0)} 
-                        list_angle.append([node,dia,0])    
-                        self.list_angle.append(['{} {} {}'.format(node,dia,0)])
+                        self.dict_angle[node][rad] = { 'angle': (0,0)} 
+                        list_angle.append([node,rad,0])    
+                        self.list_angle.append(['{} {} {}'.format(node,rad,0)])
     
     @timing    
     def polylinedata_dist(self):
         self.list_dist = []
         list_dist = []
         self.dict_dist = {}
-        for label,values in self.polylinedata.items():
+        for values in self.polylinedata.values():
             for node, vals in values.items():        
                 self.dict_dist[node] = {}
-                for dia,v in vals.items():
-                    self.dict_dist[node][dia] = {}
+                for rad,v in vals.items():
+                    self.dict_dist[node][rad] = {}
                     try:
                         dist_total = v['down_stream']['dist'] + v['up_stream']['dist']
-                        self.dict_dist[node][dia] = {'dist_total':dist_total}
-                        list_dist.append([node,dia,dist_total])
-                        self.list_dist.append(['{} {} {}'.format(node,dia,dist_total)])                    
+                        self.dict_dist[node][rad] = {'dist_total':dist_total}
+                        list_dist.append([node,rad,dist_total])
+                        self.list_dist.append(['{} {} {}'.format(node,rad,dist_total)])                    
 
                     except:
-                        self.dict_dist[node][dia] = {'dist_total': 0}   
-                        list_dist.append([node,dia,0])                      
-                        self.list_dist.append(['{} {} {}'.format(node,dia,0)])       
+                        self.dict_dist[node][rad] = {'dist_total': 0}   
+                        list_dist.append([node,rad,0])                      
+                        self.list_dist.append(['{} {} {}'.format(node,rad,0)])       
 
         self.array_dist = np.array(list_dist)  
 
@@ -312,18 +325,18 @@ class MSIIPline(PolylineGraphs):
 
         self.angle_feature_vector = {node:[list(angle['angle'])[0] for angle in  II.values()] for node, II in self.dict_angle.items()}
         write_feature_vectors_txt_file (self.angle_feature_vector,
-                                        '_'.join([self.path, self.id,'']),
-                                        'angle-vector-nrad{:02d}.txt'.format(self.nrad)) 
+                                        ''.join([self.path, self.id]),
+                                        '_ang-vec-n{:02d}.txt'.format(self.nrad)) 
         
         self.max_angle = {node: max(angle_list, key=abs) for node, angle_list in self.angle_feature_vector.items()}
         write_funvals_txt_file (self.max_angle,
-                                '_'.join([self.path, self.id,'']),
-                                'max-angle-vector-nrad{:02d}.txt'.format(self.nrad))
+                                ''.join([self.path, self.id]),
+                                '_max-ang-vec-n{:02d}.txt'.format(self.nrad))
 
         self.distance_feature_vector = {node:[dist['dist_total'] for dist in II.values()] for node, II in self.dict_dist.items()}
         write_feature_vectors_txt_file (self.distance_feature_vector,
-                                        '_'.join([self.path, self.id,'']),
-                                        'distance-vector-nrad{:02d}.txt'.format(self.nrad)) 
+                                        ''.join([self.path, self.id]),
+                                        '_dst-vec-n{:02d}.txt'.format(self.nrad)) 
 
         
     # generate dictioaries for exporting angle as function values
@@ -406,19 +419,14 @@ class MSIIGraphs(MSIIPline):
                     self.mean_segments_funv_node [node] = {}
                     
                     self.mean_segments_funv_node [node] = np.mean(self.segments_funv[edge]['funct_vals'])
-
-                # self.mean_angle_edge[edge] = {}
-                # self.mean_maxangle_edge[edge] = {}
-                # self.mean_minangle_edge[edge] = {}                
+    
 
                 self.mean_segments_funv[edge] = np.mean(self.segments_funv[edge]['funct_vals'])
                 self.mean_maxsegments_funv[edge] = np.max(self.segments_funv[edge]['funct_vals'])
                 self.mean_minsegments_funv[edge] = np.max(self.segments_funv[edge]['funct_vals'])
 
             else:
-                # self.mean_angle_edge[edge] = {}
-                # self.mean_maxangle_edge[edge] = {}
-                # self.mean_minangle_edge[edge] = {}                
+              
 
                 self.mean_segments_funv[edge] = 0
                 self.mean_maxsegments_funv[edge] = 0
@@ -579,14 +587,20 @@ class MSIIChaineOperatoire (MSIIGraphs):
         
     def export_max_func_val (self,func_val_name):    
 
-        write_labels_txt_file ( self.max_func_val, 
-                                ''.join ([  self.path, 
-                                            self.id,
-                                            '_'.join([  '',
-                                                        func_val_name,
-                                                        'labels'])
-                                        ])
-                                )  
+
+
+        write_funvals_txt_file (self.max_func_val,
+                                ''.join([self.path, self.id]),
+                                '_{}.txt'.format(func_val_name))
+
+        # write_labels_txt_file ( self.max_func_val, 
+        #                         ''.join ([  self.path, 
+        #                                     self.id,
+        #                                     '_'.join([  '',
+        #                                                 func_val_name,
+        #                                                 'labels'])
+        #                                 ])
+        #                         )  
 
     def export_chaine_operatoire_labels (self,label_dict):
 

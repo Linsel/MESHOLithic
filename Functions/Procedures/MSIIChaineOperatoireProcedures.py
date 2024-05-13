@@ -10,10 +10,10 @@ from util import *
 from Functions.EvaluateGraph import evaluate_directed_edges
 
 from Functions.EssentialEdgesFunctions import get_manual_edges,export_links,export_links_eval
-from Functions.PolylineGraph import ridge_inside_mean_curv, filter_metadata,get_vertices_in_radius#ridge_outside_mean_curv
 
 # import timing function decorator  
 from Functions.EssentialDecorators import timing
+from Functions.PolylineGraph import ridge_inside_mean_curv, filter_metadata,get_vertices_in_radius,ridge_inside_angle_normals#ridge_outside_mean_curv
 
 @timing
 def CO_prepare_procedure (obj,**kwargs):
@@ -21,14 +21,14 @@ def CO_prepare_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
     # Data import and data preparation 
-    obj.prep_polygraphs(path,id,preprocessed,labelname)
+    obj.prep_polygraphs(path,id,preprocessed,labelfilepath)
     obj.prep_ridges()
 
     # create node coordinates
-    obj.get_centroids()
+    # obj.get_centroids()
     
 
 @timing
@@ -68,10 +68,12 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
     MSII_procedure(obj,**kwargs)
     
+    print(path,id)
+
     edges = get_manual_edges(path, id)
 
-    edgeseval_rel_dict = {}
-    eval_rel_betweenness_dict = {}
+    # edgeseval_rel_dict = {}
+    # eval_rel_betweenness_dict = {}
     DiG_ridges_edges = {}
 
 
@@ -89,32 +91,37 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
         obj.get_DiG_ridge_properties(graphname)
 
-        ridgepairs = {  ridge:values['bigger_smaller'] * values['difference'] 
-                      
-                        for ridge,values in obj.ridges_pairs.items() 
-                            if values ['bigger_smaller'] != 0.0
-                    }
+        try:
 
-        print(ridgepairs)
+            ridgepairs = {  ridge:values['bigger_smaller'] * values['difference'] 
+                        
+                            for ridge,values in obj.ridges_pairs.items() 
+                                if values ['bigger_smaller'] != 0.0
+                        }
 
-        DiG_ridges_edges [n] = set(obj.DiG_ridges[graphname].edges)
+            print(ridgepairs)
 
-        edges_turned = {(edge[1],edge[0]) for edge in edges}
+            DiG_ridges_edges [n] = set(obj.DiG_ridges[graphname].edges)
 
-        evaluate_directed_edges(DiG_ridges_edges [n],edges_turned)
+            edges_turned = {(edge[1],edge[0]) for edge in edges}
 
-        evaluate_directed_edges(DiG_ridges_edges [n],edges)
+            evaluate_directed_edges(DiG_ridges_edges [n],edges_turned)
 
-        evaluate_directed_edges(edges_turned,DiG_ridges_edges [n])
+            evaluate_directed_edges(DiG_ridges_edges [n],edges)
 
-        evaluate_directed_edges(edges,DiG_ridges_edges [n])
+            evaluate_directed_edges(edges_turned,DiG_ridges_edges [n])
+
+            evaluate_directed_edges(edges,DiG_ridges_edges [n])
+
+        except:
+            print(id)
 
 def CO_concavity_procedure (obj,**kwargs):
 
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    diameter = kwargs ['diameter'] 
+    max_rad = kwargs ['max_rad'] 
     parameters = kwargs ['parameters'] 
     n_rad = kwargs ['n_rad'] 
     obj.graphname = kwargs ['graphname']
@@ -122,7 +129,7 @@ def CO_concavity_procedure (obj,**kwargs):
     CO_prepare_procedure(obj,**kwargs)
 
     # # Data import and data preparation 
-    # obj.prep_polygraphs(path,id,preprocessed,labelname)
+    # obj.prep_polygraphs(path,id,preprocessed,labelfilepath)
 
     # # Create 
     # obj.prep_ridges()
@@ -142,32 +149,103 @@ def CO_concavity_procedure (obj,**kwargs):
     obj.prepare_polyline()
 
     # extract parameters, which are important to calculate CO concavity  
-    mesh = obj.tri_mesh
+
+
     dict_label = obj.dict_label
     label_outline_vertices = obj.label_outline_vertices
     neighs = obj.ridge_neighbour_notshared_label  
 
-    metadata = filter_metadata (mesh.metadata ['ply_raw']['vertex']['data'],
+    metadata = filter_metadata (obj.metadata ['ply_raw']['vertex']['data'],
                                 parameters)
     
     for r in range(1,2**n_rad+1):
 
-        obj.label_arr = get_vertices_in_radius (mesh,
+        rad = max_rad*r/n_rad
+
+        obj.label_arr = get_vertices_in_radius (obj.vertices,
+                                                obj.kdtree,
                                                 label_outline_vertices,
                                                 neighs,
                                                 dict_label,
-                                                diameter*r/2**n_rad,
+                                                rad,
                                                 metadata)     
 
         obj.label_arr_mean = ridge_inside_mean_curv(path,id,preprocessed,r,dict_label,obj.label_arr)
 
-        obj.max_func_val = obj.label_arr_mean
+        obj.max_func_val = {vert:np.float32(max_f) for vert, values in obj.label_arr_mean.items() for max_f in values.values()}
 
         param_name = '_'.join (['-'.join(['CO',
                                              'concavity',
-                                            'r{}'.format(r)
+                                            'r{rad:.2f}'
                                              ])]) 
 
         obj.export_max_func_val(param_name)
 
         # obj.evaluate_label_arr_mean()
+
+def CO_angle_procedure (obj,**kwargs):
+
+    path = kwargs ['path'] 
+    id = kwargs ['id']
+    preprocessed = kwargs ['preprocessed']
+    max_rad = kwargs ['max_rad'] 
+    parameters = kwargs ['parameters'] 
+    n_rad = kwargs ['n_rad'] 
+    obj.graphname = kwargs ['graphname']
+
+    CO_prepare_procedure(obj,**kwargs)
+
+    # # Data import and data preparation 
+    # obj.prep_polygraphs(path,id,preprocessed,labelfilepath)
+
+    # # Create 
+    # obj.prep_ridges()
+    # obj.extract_ridges()    
+
+    # create node coordinates
+    # obj.get_centroids()
+
+    # get polylines
+    obj.edges_to_polygraphs()
+    obj.polygraphs_to_polylines()
+
+
+    # prepare for creating Pline object 
+    obj.create_normals_vertices()
+    obj.create_dict_mesh_info()
+    obj.prepare_polyline()
+
+    # extract parameters, which are important to calculate CO concavity  
+
+
+    dict_label = obj.dict_label
+    label_outline_vertices = obj.label_outline_vertices
+    neighs = obj.ridge_neighbour_notshared_label  
+
+    metadata = filter_metadata (obj.metadata ['ply_raw']['vertex']['data'],
+                                parameters)
+    
+    for r in range(1,2**n_rad+1):
+
+        rad = max_rad*r/n_rad
+
+        obj.label_arr = get_vertices_in_radius (obj.vertices,
+                                                obj.kdtree,
+                                                label_outline_vertices,
+                                                neighs,
+                                                dict_label,
+                                                rad,
+                                                metadata)     
+
+        obj.label_arr_mean = ridge_inside_angle_normals(path,id,preprocessed,obj.normals,r,dict_label,obj.label_arr)
+
+        obj.max_func_val = {vert:np.float32(max_f) for vert, values in obj.label_arr_mean.items() for max_f in values.values()}
+
+        param_name = '_'.join (['-'.join(['CO',
+                                             'concavity',
+                                            'r{rad:.2f}'
+                                             ])]) 
+
+        obj.export_max_func_val(param_name)
+
+

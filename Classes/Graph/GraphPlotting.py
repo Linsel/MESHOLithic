@@ -269,7 +269,7 @@ class GraphEvaluation (PolylineGraphs):
 
         self.ridges_connections_mesh.export(''.join ([self.path, 
                                             self.id,
-                                            '_ridge_connections', 
+                                            '_ridge-connections', 
                                             '.ply']),
                                             file_type='ply')
     
@@ -306,6 +306,58 @@ class GraphEvaluation (PolylineGraphs):
         vert_dict.update({len(vert_dict.keys()) + n_vert + 1:0 for n_vert in range(0,len(self.nodes_mesh.vertices))})
         vert_dict.update({len(vert_dict.keys()) + n_vert + 1:0 for n_vert in range(0,len(self.ridges_mesh.vertices))})
         self.vert_dict = vert_dict
+
+
+    def export_graphs_labels (self):
+
+        num_graph_model_verts = int(len(self.connections_mesh.vertices)/len(self.G_ridges.edges))
+
+        self.connection_labels = {}
+
+        
+        for n,edge in enumerate(self.G_ridges.edges):
+            for i in range (0 + n * num_graph_model_verts, (n + 1) * num_graph_model_verts):
+
+                self.connection_labels [i] = {'label':n + 1,
+                                              'edge':edge}
+
+        max_label = max([conn['label'] for conn in self.connection_labels.values()])
+
+        self.node_labels = {}
+
+        num_graph_model_verts = int(len(self.nodes_mesh.vertices)/len(self.G_ridges.nodes))
+
+        for n in range(len(self.G_ridges.nodes)):
+            for i in range (0 + n * num_graph_model_verts, (n + 1) * num_graph_model_verts):
+
+                self.node_labels [i + 1 + len(self.connection_labels.keys())] = {'label':n + 1 + max_label ,
+                                                                                 'node':n + 1}       
+
+        max_label = max([node['label'] for node in self.node_labels.values()] )      
+
+        vert_dict = {n_vert:self.connection_labels[n_vert]['label'] for n_vert in range(0,len(self.connections_mesh.vertices))}
+        vert_dict.update({int(n_vert) + 1: vals['label'] for n_vert,vals in self.node_labels .items()})
+        vert_dict.update({len(vert_dict.keys()) + int(n_vert) + 1: max_label + 1 for n_vert in range(0,len(self.ridges_mesh.vertices))})
+        self.vert_dict = vert_dict        
+
+        write_labels_txt_file(self.vert_dict,''.join ([self.path, 
+                                            self.id,
+                                            '_ridge-connections']))
+        
+        edge_file = ''.join ([self.path,
+                              self.id,
+                              '_ridge-connections-edges.json'])
+
+        with open(edge_file,"w") as f:
+            json.dump(self.connection_labels,f)
+
+        nodes_file = ''.join ([self.path,
+                              self.id,
+                              '_ridge-connections-nodes.json'])
+
+        with open(nodes_file,"w") as f:
+            json.dump(self.node_labels,f)            
+
 
     def create_graph_model_selected_labels (self,edge_label):
 

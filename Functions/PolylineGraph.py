@@ -6,6 +6,10 @@ import networkx as nx
 from skspatial.objects import Line, Sphere
 from skspatial.plotting import plot_3d
 
+from scipy.spatial import cKDTree
+
+from Functions.BasicMSII1D import test_nodes_two_neigh,angle_between_vectors
+
 def create_start_list(p_list,pos_iter):
     
     # using % operator and loop
@@ -177,15 +181,52 @@ def ridge_inside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
                                 for vert,neighs in values.items()
 
                         }
-    pd.DataFrame.from_dict(label_arr_mean, orient='index').to_csv(  ''.join([path,
-                                                                    id,
-                                                                    preprocessed,
-                                                                    '-'.join(['_inside','mean','curv','r{}'.format(radius)]),
-                                                                    '.txt']), 
-                                                                    mode='w',
-                                                                    header=False, 
-                                                                    index=True,
-                                                                    sep=' ') 
+    
+    dummies = pd.DataFrame.from_dict(label_arr_mean, orient='index')
+
+    df = dummies.idxmax(axis=1)
+
+    df.to_csv(  ''.join([path,
+                         id,
+                         preprocessed,
+                         '-'.join(['_inside','mean','curv','r{}_labels'.format(radius)]),
+                         '.txt']), 
+                mode='w',
+                header=False, 
+                index=True,
+                sep=' ') 
+    
+    return label_arr_mean
+
+def ridge_inside_angle_normals(path,id,preprocessed,normals,radius,dict_label,label_arr):
+
+    label_arr_mean = {  vert:{nei: angle_between_vectors(normals[vert],
+                                    [0,0,0],
+                                    np.mean(params,axis=0))[0] 
+                                for nei,params in neighs.items()
+                                    if dict_label[vert] == nei
+                                } 
+                          
+                            for values in label_arr.values() 
+                                for vert,neighs in values.items()
+
+                        }
+    
+    print(label_arr_mean)
+    
+    dummies = pd.DataFrame.from_dict(label_arr_mean, orient='index')
+
+    df = dummies.idxmax(axis=1)
+
+    df.to_csv(  ''.join([path,
+                         id,
+                         preprocessed,
+                         '-'.join(['_inside','mean','curv','r{}_labels'.format(radius)]),
+                         '.txt']), 
+                mode='w',
+                header=False, 
+                index=True,
+                sep=' ') 
     
     return label_arr_mean
     
@@ -210,15 +251,14 @@ def ridge_outside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
                                                                     index=True,
                                                                     sep=' ')  
 
-def get_vertices_in_radius (mesh:object,
+def get_vertices_in_radius (vertices:np.ndarray,
+                            kdtree:cKDTree,
                             label_verts:dict,
                             neighs: dict,
                             dict_label: dict,
                             radius:float,
                             metadata: np.ndarray) -> dict:
 
-    kdtree = mesh.kdtree
-    vertices = mesh.vertices
 
     label_arr = {}
 
