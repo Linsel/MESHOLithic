@@ -125,7 +125,7 @@ class TransformLabelledMesh (LabelledMesh):
 
         # filtering for most often neighboring label -> ridge label
         # neigh_label_list = list([item for vals in self.ridge_neighbour_notshared_label.values() for item in vals])
-        ridge_label = 1#max(set(neigh_label_list), key = neigh_label_list.count)
+        ridge_label = self.ridge_label#max(set(neigh_label_list), key = neigh_label_list.count)
 
         # filtering for all vertices with ridge label
         ridge_vertices = [vert for vert,labels in notshared_label.items() if ridge_label not in labels]

@@ -106,32 +106,36 @@ class Mesh:
         self.path = path
         self.id = id     
         self.preprocessed = preprocessed   
-        self.tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
+        tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
 
         # Read the vertex data as array
-        self.vertices = np.array(self.tri_mesh.vertices)
+        self.vertices = np.array(tri_mesh.vertices)
 
         # Read the normals data as array
-        self.normals = np.array(self.tri_mesh.vertex_normals)        
+        self.normals = np.array(tri_mesh.vertex_normals)        
 
         # Read the vertex data as array
-        self.vertices_dict = {n:v for n,v in enumerate(self.tri_mesh.vertices)}
+        self.vertices_dict = {n:v for n,v in enumerate(tri_mesh.vertices)}
 
         # Read the face data as array
-        self.faces = np.array(self.tri_mesh.faces)
+        self.faces = np.array(tri_mesh.faces)
         
         # Read the edge data
-        self.edges = self.tri_mesh.edges
+        self.edges = tri_mesh.edges
 
         # Read a list of vertex_neighbors
-        self.vertex_neighbors = self.tri_mesh.vertex_neighbors
+        self.vertex_neighbors = tri_mesh.vertex_neighbors
 
         # Read the vertex_adjacency_graph        
-        self.vertex_adjacency_graph = self.tri_mesh.vertex_adjacency_graph        
+        self.vertex_adjacency_graph = tri_mesh.vertex_adjacency_graph        
 
         # Create a dict of vertex_neighbors
         self.vertex_neighbors_dict = {num: vertex_neighbors 
                                            for num, vertex_neighbors in enumerate(self.vertex_neighbors)}
+        
+        self.metadata = tri_mesh.metadata
+
+        self.kdtree = tri_mesh.kdtree
          
     def get_quality(self):
 
@@ -139,7 +143,7 @@ class Mesh:
         Saves the quality separately in the quality variable.
         """      
 
-        self.quality = self.tri_mesh.metadata ['ply_raw']['vertex']['data']['quality']
+        self.quality = self.metadata ['ply_raw']['vertex']['data']['quality']
 
     # saving quality in accesible variable or calculating the maximum gaussian curvature in 8 diffent radii
     def get_or_calc_curvature(self):
@@ -156,8 +160,10 @@ class Mesh:
             # radii in which the gaussian curvature gets measured
             radii = np.linspace(0.001, 2.0, 8)
             # Calculate the Gaussian curvature and set it in ratio to the sphere_ball_intersection
-            self.quality = np.array([np.max(g) for g in np.array([discrete_gaussian_curvature_measure(self.tri_mesh, self.vertices, r)/sphere_ball_intersection(1, r) for r in radii]).T])
 
+            tri_mesh = trimesh.load(''.join([self.path, self.id, self.preprocessed, '.ply']))
+            self.quality = np.array([np.max(g) for g in np.array([discrete_gaussian_curvature_measure(tri_mesh, self.vertices, r)/sphere_ball_intersection(1, r) for r in radii]).T])
+            del tri_mesh
     # def get_vertices(self):
     #     """
     #     Returns coordinates of vertices 

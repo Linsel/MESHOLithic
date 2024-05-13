@@ -47,26 +47,26 @@ class LabelledMesh (Mesh):
     """
 
     def __init__(   self,           
-                    label_name: str = None):
+                    labelfilepath: str = None):
 
         """
         Super initialize Mesh object which contains a triangular 3D mesh and expand this with a label file.
 
         Args:   
-            label_name (str): name of the label txt file        
+            labelfilepath (str): path to the label txt file        
         """
 
         super().__init__()
 
         # check for None only to avoid warning messages in subclasses
-        if label_name is not None:
-            self.label_name = label_name                
+        if labelfilepath is not None:
+            self.labelfilepath = labelfilepath                
 
     def load_labelled_mesh (self, 
                             path: str, 
                             id: str, 
                             preprocessed: str, 
-                            label_name: str):
+                            labelfilepath: str):
 
         """
         Function to load a ply file and the txt label file to the LabelledMesh object
@@ -75,13 +75,16 @@ class LabelledMesh (Mesh):
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing step of the ply file.    
-            label_name (str): name of the label file                 
+            labelfilepath (str): name of the label file                 
         """
+        
         self.load_ply(path, id, preprocessed)
 
-        self.label_name = label_name
-        self.read_label_as_dict()       
+        # path to label file 
+        self.labelfilepath = labelfilepath 
 
+        self.read_label_as_dict()    
+        
     # Import faces and vertices of ply as numpy arrays
     def read_label_as_dict (self):
 
@@ -89,11 +92,9 @@ class LabelledMesh (Mesh):
         Imports the label txt file of an ply file            
         """        
 
-        # path to the segmentation
-        labelname = ''.join([self.path, self.id, self.label_name, ".txt"]) 
 
         # import label and create dictionary 
-        df_label = pd.read_csv(labelname,skiprows=5,header=None,sep=' ',names=['a','b'],dtype=int)  # import txt segmentation 
+        df_label = pd.read_csv(self.labelfilepath,skiprows=5,header=None,sep=' ',names=['a','b'],dtype=int)  
 
         self.dict_label = dict(zip(df_label.a, df_label.b))
 
@@ -106,8 +107,7 @@ class LabelledMesh (Mesh):
         Goal is extracting the outline vertices of each label.
         """
 
-        # Create a dictionary of all vertices (keys), which have more than 1 neighbouring label and a list of all neighbouring vertices with the 
-        # same label 
+        # Create a dictionary of all vertices (keys), which have more than 1 neighbouring label and a list of all neighbouring vertices with the same label 
         
         self.ridge_neighbour_shared_label = {   key:
                                                     [(v) for v in self.vertex_neighbors_dict[key] + [self.dict_label[key]] 
@@ -208,16 +208,18 @@ class LabelledMesh (Mesh):
             as vertex coordinates (values).
         """
 
-        # Nearest neighbour (NN) from label centroid to submesh        
-        self.NNs_to_mesh = {label: get_nearest_neighbor(self.kdtree,self.vertices,centroid)
+        # Nearest neighbour (NN) from label centroid to mesh        
+        self.NNs_to_mesh = {label: get_nearest_neighbor(self.kdtree,
+                                                        self.vertices,
+                                                        centroid)
                                 
                                 for label, centroid in self.centroids.items()
                             }
 
-        self.get_label_submeshes()
-
         # Nearest neighbour (NN) from label centroid to submesh 
-        self.NNs_to_submeshes = {label: get_nearest_neighbor(self.submeshes[label][0],centroid)
+        self.NNs_to_submeshes = {label: get_nearest_neighbor(self.submeshes[label][0].kdtree,
+                                                             self.submeshes[label][0].vertices,
+                                                             centroid)
                                 
                                     for label, centroid in self.centroids.items()
                                 } 
@@ -272,6 +274,10 @@ class LabelledMesh (Mesh):
         self.klabels = {vert:label + 1 for vert,label in enumerate(self.kmeans.labels_)} 
 
     def export_kmeans_labels (self):
+
+        """
+        Creates from the kmeans labels a txt file
+        """
 
         clust_verts = get_labels_IoU_max (self.dict_label,self.klabels) 
 
@@ -345,12 +351,17 @@ class LabelledMesh (Mesh):
         
         self.ridges_mesh = trimesh.Trimesh(vertices=vertex_data,faces=faces_array)
 
+        self.ridge_labels = {n_vert:1 for n_vert,_ in enumerate(vertex_data)}
+
     ## nodes mesh
     def create_nodes_mesh (self,nodes,radius):
 
         self.nodes_list = [create_node_sphere (self.centroids [node],radius) for node in nodes]
 
         self.nodes_mesh = trimesh.util.concatenate(self.nodes_list)
+
+        self.node_labels = {n_vert: n + 1 for n,node in enumerate(nodes) for n_vert,_ in enumerate(create_node_sphere (self.centroids [node],radius).vertices)}
+
 
     ## get mean quality of submeshes 
     def get_submeshes_quality_mean (self):
@@ -389,7 +400,7 @@ class PolylineGraphs (LabelledMesh):
                         path: str, 
                         id: str, 
                         preprocessed: str, 
-                        label_name: str):
+                        labelfilepath: str):
     
         """
         Function to prepare a polygraph from labbeled mesh.
@@ -398,17 +409,16 @@ class PolylineGraphs (LabelledMesh):
             path (str): String representing the path to the file.
             id (str): String representing the file id of the ply file.
             preprocessed (str): String representing the preprocessing step of the ply file.    
-            label_name (str): name of the label file                   
+            labelfilepath (str): path to the label file                   
         """  
 
-        self.load_labelled_mesh (path, id, preprocessed, label_name)
+        self.load_labelled_mesh (path, id, preprocessed, labelfilepath)
 
         self.extract_ridges()
         # create node coordinates
         self.get_centroids()        
 
-        self.get_NNs()
-    
+        # self.get_NNs()
               
     def edges_to_polygraphs (self):
 
@@ -635,7 +645,13 @@ class PolylineGraphs (LabelledMesh):
                     for label,neigh_labels in self.neighbouring_labels.items()
                     for n_l in neigh_labels
                     if n_l in self.neighbouring_labels[label]
-                }     
+                }    
+
+    def  segments_export (self):
+
+        self.segments
+
+
 
     def segment_pline_funct_val (self,
                                  funct_val:dict):
@@ -730,6 +746,7 @@ class PolylineGraphs (LabelledMesh):
         Returns:
             (nx.DiGraph): directed graph representing the ridge pairs with weights.
         """        
+        
 
         directed_edges = self.get_directed_edges(ridge_pairs)
         

@@ -10,7 +10,7 @@ sys.path.insert(0, pparentdir)
 from util import *
 
 # compare two operational sequences 
-from Functions.EvaluateGraph import directededges_parameters
+from Functions.EvaluateGraph import directed_edges_parameters
 
 from Functions.EssentialEdgesFunctions import get_manual_edges
 
@@ -26,17 +26,21 @@ def update_label_procedure (obj,**kwargs):
     path = kwargs['path']
     id = kwargs['id']
     preprocessed = kwargs['preprocessed']
-    labelname = kwargs['labelname']
+    labelfilepath = kwargs['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname)
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
 
     dict_label = obj.dict_label 
 
     new_label = np.array([dict_label[n] for n,_ in enumerate(dict_label.items())])
 
-    file_path = ''.join([path,id,labelname,'.ply'])
+    file_path = ''.join([labelfilepath [:-4],'.ply'])
 
-    update_vertex_label(obj.tri_mesh,new_label.astype(np.int32),file_path)
+    tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
+
+    update_vertex_label(tri_mesh,new_label.astype(np.int32),file_path)
+
+    del tri_mesh
 
 @timing
 def ridge_prepare_procedure (obj,**kwargs):
@@ -44,11 +48,11 @@ def ridge_prepare_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
 
     # Data import and data preparation 
-    obj.load_labelled_mesh (path, id, preprocessed, labelname)
+    obj.load_labelled_mesh (path, id, preprocessed, labelfilepath)
 
     obj.extract_ridges()
     
@@ -60,9 +64,9 @@ def kmeans_label_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname)
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
 
     obj.get_front_and_back_kmeans()
 
@@ -74,9 +78,9 @@ def kmeans_slice_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname)
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
 
     obj.get_front_and_back_kmeans()
 
@@ -88,9 +92,9 @@ def label_slice_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
 
     obj.get_label_submeshes()
 
@@ -101,14 +105,30 @@ def label_slice_procedure (obj,**kwargs):
     # obj.get_NNs()
 
 @timing
+def centroids_NNs_procedure (obj,**kwargs):
+
+    path = kwargs ['path'] 
+    id = kwargs ['id']
+    preprocessed = kwargs ['preprocessed']
+    labelfilepath = kwargs ['labelfilepath']
+
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
+
+    obj.extract_ridges()
+
+    # create node coordinates
+    obj.get_centroids()
+    obj.get_NNs_ids()
+
+@timing
 def direct_graph_area_procedure (obj,**kwargs):
 
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
 
     obj.get_label_submeshes()    
 
@@ -124,9 +144,9 @@ def export_ridges_mesh_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
     
-    obj.load_labelled_mesh(path,id,preprocessed,labelname)
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
 
     obj.extract_ridges()
 
@@ -144,9 +164,9 @@ def direct_graph_area_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelname) 
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
 
     obj.get_label_submeshes()    
 

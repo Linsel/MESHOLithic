@@ -7,7 +7,7 @@ def edge_to_arrow_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelname = kwargs ['labelname']
+    labelfilepath = kwargs ['labelfilepath']
     exp_path = kwargs ['exp_path'] 
     circumference = kwargs ['circumference'] 
     radius = kwargs ['radius']
@@ -15,7 +15,7 @@ def edge_to_arrow_procedure (obj,**kwargs):
     edge_name = kwargs['edge_name']
 
     # Data import and data preparation 
-    obj.prep_polygraphs(path,id,preprocessed,labelname,exp_path)
+    obj.prep_polygraphs(path,id,preprocessed,labelfilepath,exp_path)
     obj.prep_ridges()
 
     # create node coordinates
