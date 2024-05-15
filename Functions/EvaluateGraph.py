@@ -1,4 +1,5 @@
 from Functions.exportFiles.writeTxt import write_links_csv_file, write_links_eval_csv_file
+import json
 
 # compare two directed edge sets 
 def evaluate_directed_edges (GT,RES):
@@ -128,5 +129,12 @@ def direct_edges_w_phase (path,id,preprocessed,edges,para,para_name):
     args = [path,id,preprocessed,para_name]
 
     export_links (compare_edges,*args)
+
+def export_graphs_json(G, fname):
+    
+    json.dump(dict(nodes=[[n, G.node[n]] for n in G.nodes()],
+                   edges=[[u, v, G.edge[u][v]] for u,v in G.edges()]),
+              open(fname, 'w'), indent=3)
+    
 
 

@@ -7,7 +7,7 @@ sys.path.insert(0, parentdir)
 from util import *
 
 # compare two operational sequences 
-from Functions.EvaluateGraph import directed_edges_parameters, export_links,direct_edges_w_parameter,direct_edges_w_phase
+from Functions.EvaluateGraph import directed_edges_parameters, export_links,direct_edges_w_parameter,direct_edges_w_phase,export_graphs_json
 
 from Functions.EssentialEdgesFunctions import get_manual_edges
 
@@ -41,6 +41,8 @@ def graph_undirected_procedure (obj,**kwargs):
     obj.prep_ridges()
     obj.polineline_segmenting()
     obj.segment_to_graph()
+
+    export_graphs_json(obj.G_ridges, ''.join([path,id,preprocessed,'_G.json']))   
 
 
 def graph_direct_procedure (obj,**kwargs):
