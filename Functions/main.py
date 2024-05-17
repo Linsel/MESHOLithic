@@ -35,6 +35,9 @@ from Functions.Procedures.MSIIChaineOperatoireProcedures import CO_prepare_proce
 from Functions.Procedures.GraphEvaluationProcedures import graph_undirected_procedure,graph_direct_procedure,graph_direct_parameter_procedure,graph_evaluate_procedure,graph_direct_network_parameter_procedure
 from Functions.Procedures.ChaineOperatoireProcedures import edge_to_arrow_procedure
 
+# Data processing
+from Functions.Procedures.DataProcedures import merge_data_procedure
+
 # minions
 from minions.GigaMeshMinions import command_line_GigaMesh,MSII_single_feature
 from minions.MeshMinions import update_vertex_quality,update_vertex_label

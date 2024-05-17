@@ -11,7 +11,7 @@ from Functions.EvaluateGraph import directed_edges_parameters, export_links,dire
 
 from Functions.EssentialEdgesFunctions import get_manual_edges
 
-def graph_undirected_procedure (obj,**kwargs):
+def prep_graph_mesh_procedure(obj,**kwargs):
 
     # LabelledMesh init
     path = kwargs ['path'] 
@@ -41,6 +41,40 @@ def graph_undirected_procedure (obj,**kwargs):
     obj.prep_ridges()
     obj.polineline_segmenting()
     obj.segment_to_graph()
+
+
+def graph_undirected_procedure (obj,**kwargs):
+
+    # LabelledMesh init
+    path = kwargs ['path'] 
+    id = kwargs ['id']
+    preprocessed = kwargs ['preprocessed']
+    # labelfilepath = kwargs ['labelfilepath']
+
+    prep_graph_mesh_procedure(obj,**kwargs)
+
+    # # Data import 
+    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
+    # obj.extract_ridges()
+
+    # # get polylines
+    # obj.edges_to_polygraphs()
+    # obj.polygraphs_to_polylines()
+
+    # # create node coordinates
+    # obj.get_centroids()
+    # # obj.get_NNs()
+    # # obj.get_NNs()
+
+    # # prepare for creating MSII1D_Pline object 
+    # obj.create_normals_vertices()
+    # obj.create_dict_mesh_info()
+    # obj.prepare_polyline()
+
+    # # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
+    # obj.prep_ridges()
+    # obj.polineline_segmenting()
+    # obj.segment_to_graph()
 
     export_graphs_json(obj.G_ridges, ''.join([path,id,preprocessed,'_G.json']))   
 
@@ -51,34 +85,36 @@ def graph_direct_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelfilepath = kwargs ['labelfilepath']
+    # labelfilepath = kwargs ['labelfilepath']
+
+    prep_graph_mesh_procedure(obj,**kwargs)
 
     # scales
     radius_scale = kwargs ['radius_scale'] 
     circumference_scale = kwargs ['circumference_scale'] 
 
-    # Data import 
-    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
-    obj.extract_ridges()
+    # # Data import 
+    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
+    # obj.extract_ridges()
 
-    # get polylines
-    obj.edges_to_polygraphs()
-    obj.polygraphs_to_polylines()
+    # # get polylines
+    # obj.edges_to_polygraphs()
+    # obj.polygraphs_to_polylines()
 
-    # create node coordinates
-    obj.get_centroids()
-    # obj.get_NNs()
-    # obj.get_NNs()
+    # # create node coordinates
+    # obj.get_centroids()
+    # # obj.get_NNs()
+    # # obj.get_NNs()
 
-    # prepare for creating MSII1D_Pline object 
-    obj.create_normals_vertices()
-    obj.create_dict_mesh_info()
-    obj.prepare_polyline()
+    # # prepare for creating MSII1D_Pline object 
+    # obj.create_normals_vertices()
+    # obj.create_dict_mesh_info()
+    # obj.prepare_polyline()
 
-    # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
-    obj.prep_ridges()
-    obj.polineline_segmenting()
-    obj.segment_to_graph()
+    # # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
+    # obj.prep_ridges()
+    # obj.polineline_segmenting()
+    # obj.segment_to_graph()
 
     obj.create_undirected_model(radius_scale,circumference_scale)
 
@@ -89,30 +125,34 @@ def graph_direct_network_parameter_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelfilepath = kwargs ['labelfilepath']
+    # labelfilepath = kwargs ['labelfilepath']
 
-    # Data import 
-    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
-    obj.extract_ridges()
+    prep_graph_mesh_procedure(obj,**kwargs)
 
-    # get polylines
-    obj.edges_to_polygraphs()
-    obj.polygraphs_to_polylines()
+    # labelfilepath = kwargs ['labelfilepath']
 
-    # create node coordinates
-    obj.get_centroids()
-    # obj.get_NNs()
-    # obj.get_NNs()
+    # # Data import 
+    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
+    # obj.extract_ridges()
 
-    # prepare for creating MSII1D_Pline object 
-    obj.create_normals_vertices()
-    obj.create_dict_mesh_info()
-    obj.prepare_polyline()
+    # # get polylines
+    # obj.edges_to_polygraphs()
+    # obj.polygraphs_to_polylines()
 
-    # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
-    obj.prep_ridges()
-    obj.polineline_segmenting()
-    obj.segment_to_graph()
+    # # create node coordinates
+    # obj.get_centroids()
+    # # obj.get_NNs()
+    # # obj.get_NNs()
+
+    # # prepare for creating MSII1D_Pline object 
+    # obj.create_normals_vertices()
+    # obj.create_dict_mesh_info()
+    # obj.prepare_polyline()
+
+    # # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
+    # obj.prep_ridges()
+    # obj.polineline_segmenting()
+    # obj.segment_to_graph()
 
     obj.G_network_parameters = {
                             'degree': nx.degree(obj.G_ridges),
@@ -132,33 +172,36 @@ def graph_direct_parameter_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    labelfilepath = kwargs ['labelfilepath']
+    # labelfilepath = kwargs ['labelfilepath']
+
+    prep_graph_mesh_procedure(obj,**kwargs)
+
     is_phase = kwargs ['is_phase'] 
-    radius_scale = kwargs ['radius_scale']   
-    circumference = kwargs ['circumference'] 
-    nodesname =  kwargs ['nodesname']  
+    params = kwargs ['params']  
 
-    # Data import 
-    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
-    obj.extract_ridges()
+    # # Data import 
+    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
+    # obj.extract_ridges()
 
-    # get polylines
-    obj.edges_to_polygraphs()
-    obj.polygraphs_to_polylines()
+    # # get polylines
+    # obj.edges_to_polygraphs()
+    # obj.polygraphs_to_polylines()
 
-    # create node coordinates
-    obj.get_centroids()
+    # # create node coordinates
+    # obj.get_centroids()
+    # # obj.get_NNs()
+    # # obj.get_NNs()
 
-    # prepare for creating MSII1D_Pline object 
-    obj.create_normals_vertices()
-    obj.create_dict_mesh_info()
-    obj.prepare_polyline()
+    # # prepare for creating MSII1D_Pline object 
+    # obj.create_normals_vertices()
+    # obj.create_dict_mesh_info()
+    # obj.prepare_polyline()
 
-    # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
-    obj.prep_ridges()
-    obj.polineline_segmenting()
-    obj.segment_to_graph()
-    obj.create_undirected_model(radius_scale,circumference)
+    # # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
+    # obj.prep_ridges()
+    # obj.polineline_segmenting()
+    # obj.segment_to_graph()
+    # obj.create_undirected_model(radius_scale,circumference)
 
     obj.export_graphs_labels()
     
@@ -168,17 +211,6 @@ def graph_direct_parameter_procedure (obj,**kwargs):
                   False: direct_edges_w_parameter}
 
     func = procedures.get(is_phase)
-
-    df = pd.read_csv (''.join([path,
-                            id,
-                            preprocessed,
-                            nodesname]),
-                    sep=",")
-
-    values_dict = {row['gt_label']:row['phase'] for _, row in df.iterrows()}
-
-
-    params = {'name':'', 'values':values_dict}
 
     func (path,id,preprocessed,edges,params['values'],params['name'])
 
