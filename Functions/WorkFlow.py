@@ -66,7 +66,7 @@ def workflow_step (path,folder,workflow,n):
             'filename':workflow[next_step]['labelname']}
         
         # add_labels(**kwargs)
-        label_paths = get_file_paths(**kwargs)
+        label_paths = get_file_paths_filtered(**kwargs)
         
 
     if workflow[next_step]['add_links'] == True:
@@ -78,7 +78,7 @@ def workflow_step (path,folder,workflow,n):
             'filename':workflow[next_step]['linkname']}  
                         
         # add_links(**kwargs)
-        link_paths = get_file_paths(**kwargs)
+        link_paths = get_file_paths_filtered(**kwargs)
                 
 
     for file in files:

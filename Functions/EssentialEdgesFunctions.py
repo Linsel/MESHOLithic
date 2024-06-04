@@ -36,6 +36,28 @@ def get_manual_edges(path, id):
         except:
             print ('Has no edge file')
 
+
+def get_manual_links(linkfilepath):
+
+    """
+    imports and returns edges files and differentiate between edges, which are referenced to 3D mesh or need to be referenced to the 
+    segmentation label. 
+    
+    Args:
+        get_manual_links (str): path to the file.
+
+    Returns:
+        manual_edges (set): returns set of edges or referenced edges
+    """
+
+    edge_df = pd.read_csv(linkfilepath,
+                            sep=',',header=0)
+
+    
+    manual_edges  = {(int(edge[0]),int(edge[1])) for _,edge in edge_df.iterrows()}
+
+    return manual_edges
+
 def export_links (links,*args):
 
     write_links_txt_file (links, ''.join (['_'.join([arg for arg in args]),

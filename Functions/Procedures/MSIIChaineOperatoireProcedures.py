@@ -9,7 +9,7 @@ from util import *
 # compare two operational sequences 
 from Functions.EvaluateGraph import evaluate_directed_edges
 
-from Functions.EssentialEdgesFunctions import get_manual_edges,export_links,export_links_eval
+from Functions.EssentialEdgesFunctions import get_manual_links#get_manual_edges,export_links,export_links_eval
 
 # import timing function decorator  
 from Functions.EssentialDecorators import timing
@@ -57,6 +57,7 @@ def MSII_procedure (obj,**kwargs):
     obj.calc_II_new_sphere (diameter,n_rad)
     print('done (6/7)')      
     obj.get_feature_vectors()
+    print('Process finished (7/7)') 
 
 @timing
 def MSII_feature_vector_procedure (obj,**kwargs):
@@ -65,12 +66,14 @@ def MSII_feature_vector_procedure (obj,**kwargs):
     id = kwargs ['id']
     graphname = kwargs ['graphname'] 
     n_rad = kwargs ['n_rad']
+    linkfilepath = kwargs ['linkfilepath'] 
+    
 
     MSII_procedure(obj,**kwargs)
     
     print(path,id)
 
-    edges = get_manual_edges(path, id)
+    edges = get_manual_links (linkfilepath)# get_manual_edges(path, id)
 
     # edgeseval_rel_dict = {}
     # eval_rel_betweenness_dict = {}
@@ -93,13 +96,13 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
         try:
 
-            ridgepairs = {  ridge:values['bigger_smaller'] * values['difference'] 
+            # ridgepairs = {  ridge:values['bigger_smaller'] * values['difference'] 
                         
-                            for ridge,values in obj.ridges_pairs.items() 
-                                if values ['bigger_smaller'] != 0.0
-                        }
+            #                 for ridge,values in obj.ridges_pairs.items() 
+            #                     if values ['bigger_smaller'] != 0.0
+            #             }
 
-            print(ridgepairs)
+            # print(ridgepairs)
 
             DiG_ridges_edges [n] = set(obj.DiG_ridges[graphname].edges)
 

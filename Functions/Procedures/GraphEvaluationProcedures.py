@@ -42,6 +42,8 @@ def prep_graph_mesh_procedure(obj,**kwargs):
     obj.polineline_segmenting()
     obj.segment_to_graph()
 
+    return obj
+
 
 def graph_undirected_procedure (obj,**kwargs):
 
@@ -51,7 +53,7 @@ def graph_undirected_procedure (obj,**kwargs):
     preprocessed = kwargs ['preprocessed']
     # labelfilepath = kwargs ['labelfilepath']
 
-    prep_graph_mesh_procedure(obj,**kwargs)
+    obj = prep_graph_mesh_procedure(obj,**kwargs)
 
     # # Data import 
     # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
@@ -176,6 +178,10 @@ def graph_direct_parameter_procedure (obj,**kwargs):
 
     prep_graph_mesh_procedure(obj,**kwargs)
 
+    # scales
+    radius_scale = kwargs ['radius_scale'] 
+    circumference_scale = kwargs ['circumference_scale'] 
+
     is_phase = kwargs ['is_phase'] 
     params = kwargs ['params']  
 
@@ -201,7 +207,9 @@ def graph_direct_parameter_procedure (obj,**kwargs):
     # obj.prep_ridges()
     # obj.polineline_segmenting()
     # obj.segment_to_graph()
-    # obj.create_undirected_model(radius_scale,circumference)
+
+
+    obj.create_undirected_model(radius_scale,circumference_scale)
 
     obj.export_graphs_labels()
     
