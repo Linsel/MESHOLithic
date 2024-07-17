@@ -130,11 +130,17 @@ def direct_edges_w_phase (path,id,preprocessed,edges,para,para_name):
 
     export_links (compare_edges,*args)
 
+# def export_graphs_json(G, fname):
+    
+#     json.dump(dict(nodes=[[n, G.nodes[n]] for n in G.nodes()] #,
+#                    #edges=[[u, v, G.edge[u][v]] for u,v in G.edges()]
+#                    ),
+#               open(fname, 'w'), indent=3)
+
 def export_graphs_json(G, fname):
     
-    json.dump(dict(nodes=[[n, G.node[n]] for n in G.nodes()],
-                   edges=[[u, v, G.edge[u][v]] for u,v in G.edges()]),
-              open(fname, 'w'), indent=3)
-    
+    json.dump(dict(nodes=[[n, G.nodes[n]] for n in G.nodes()],
+                   edges=[[u, v] for u,v in G.edges()]),
+              open(fname, 'w'), indent=3)    
 
 

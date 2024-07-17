@@ -635,12 +635,13 @@ class PolylineGraphs (LabelledMesh):
             segments (dict): dictionary consisting of edge tuples of labels (keys) and a nested dictionary. 
                                 This contains 'vertices' (key) and vertex ids belonging to segment (values).
         """        
-      
+
         self.segments = { 
                     (label,n_l):    
                         {'vertices':[ v
                                         for v in self.dict_plines[label]['vertices'] 
-                                            if n_l in self.ridge_neighbour_notshared_label[v]]}
+                                            if  v in self.ridge_neighbour_notshared_label.keys() and 
+                                                n_l in self.ridge_neighbour_notshared_label[v]]}
 
                     for label,neigh_labels in self.neighbouring_labels.items()
                     for n_l in neigh_labels

@@ -161,8 +161,8 @@ def CO_concavity_procedure (obj,**kwargs):
     metadata = filter_metadata (obj.metadata ['ply_raw']['vertex']['data'],
                                 parameters)
     
-    for r in range(1,2**n_rad+1):
-
+    for n,r in enumerate(range(1,n_rad+1)):
+        m = 0#n+1
         rad = max_rad*r/n_rad
 
         obj.label_arr = get_vertices_in_radius (obj.vertices,
@@ -173,13 +173,14 @@ def CO_concavity_procedure (obj,**kwargs):
                                                 rad,
                                                 metadata)     
 
-        obj.label_arr_mean = ridge_inside_mean_curv(path,id,preprocessed,r,dict_label,obj.label_arr)
+        obj.label_arr_mean = ridge_inside_mean_curv(path,id,preprocessed,m,rad,dict_label,obj.label_arr)
 
         obj.max_func_val = {vert:np.float32(max_f) for vert, values in obj.label_arr_mean.items() for max_f in values.values()}
 
-        param_name = '_'.join (['-'.join(['CO',
-                                             'concavity',
-                                            'r{rad:.2f}'
+        param_name = '_'.join (['-'.join([  'CO',
+                                            'concavity',
+                                            f'n{m:02d}',
+                                            f'r{rad:.2f}'
                                              ])]) 
 
         obj.export_max_func_val(param_name)
@@ -228,7 +229,7 @@ def CO_angle_procedure (obj,**kwargs):
     metadata = filter_metadata (obj.metadata ['ply_raw']['vertex']['data'],
                                 parameters)
     
-    for r in range(1,2**n_rad+1):
+    for n,r in enumerate(range(1,2*n_rad+1)):
 
         rad = max_rad*r/n_rad
 
@@ -245,8 +246,9 @@ def CO_angle_procedure (obj,**kwargs):
         obj.max_func_val = {vert:np.float32(max_f) for vert, values in obj.label_arr_mean.items() for max_f in values.values()}
 
         param_name = '_'.join (['-'.join(['CO',
-                                             'concavity',
-                                            'r{rad:.2f}'
+                                             'angle',
+                                            f'n{0:02d}',
+                                            f'r{rad:.2f}',
                                              ])]) 
 
         obj.export_max_func_val(param_name)

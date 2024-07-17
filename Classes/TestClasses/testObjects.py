@@ -13,11 +13,17 @@ import trimesh
 from plyfile import PlyData,PlyElement
 
 
-from segmentation.prototyping.Functions.writeTxts import write_labels_txt_file
+from minions.MeshTxtMinions import write_labels_file
 
 from scipy.spatial import Delaunay
 
-# from IntegralInvariants.II1DClasses import MSII1D_Pline
+from minions.PathMinions import create_mesh_from_polyline
+from scipy.spatial import distance
+from minions.DataMinions import create_svg_paths_to_labeled_path,extract_coordinates_from_svg
+
+
+
+from IntegralInvariants.II1DClasses import MSIIPline
 
 def arr_to_tuple(arr):
 
@@ -166,16 +172,20 @@ class testPolyline ():
 
     def create_pline(self):
 
-        self.pline = MSII1D_Pline()
+        self.pline = MSIIPline()
 
         self.pline.polygraphs = {1:{'G':self.G}}
 
         self.pline.vertices = np.array([ list(self.G.nodes[node]['pos']) 
                                 for node in self.G.nodes])
 
+        self.pline.nodes = self.G.nodes
+
         self.pline.path,self.pline.exp_path, self.pline.name  = self.path,self.exp_path,self.name 
         
         self.pline.dict_mesh_info = self.dict_mesh_info
+
+        return self
 
     def plot_polyline_simple(self):
 
@@ -302,6 +312,19 @@ class testCube ():
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_trisurf(self.sub_box.vertices[:, 0], self.sub_box.vertices[:,1], triangles=self.sub_box.faces, Z=self.sub_box.vertices[:,2]) 
 
+def testProfileMeshFromSVG (filepath,name,edge):    
+
+        labeled_path = create_svg_paths_to_labeled_path (filepath,name)
+        vertices,dict_label = extract_coordinates_from_svg(labeled_path)
+        path_dist = sum([distance.euclidean (vertices[i],vertices[i+1]) for i in range(len(vertices)-1)])
+
+        path = {'path': [n for n,_ in enumerate (vertices)], 
+                'dist': path_dist}
+
+
+        create_mesh_from_polyline(filepath,name,edge,path,vertices,dict_label)
+    
+
 class testObjects():
     def __init__(self):
         pass
@@ -314,23 +337,28 @@ class testObjects():
 
     def create_testpolyline(self):
 
-        self.testpolyline  = testPolyline (self.path,self.exp_path,self.name)
+        self.testpolyline = testPolyline (self.path,self.exp_path,self.name)
+            
+    def create_testProfileMeshFromSVG(self,edge):
+
+        testProfileMeshFromSVG(self.path,self.name,edge)
 
     def create_testmesh_labeled(self):
-        self.testmesh  = testMesh ()
+
+        self.testmesh = testMesh ()
      
     def create_testpolyline_scaled(self,scales):       
 
-        self.testpolyline_scaled  = testPolylineScaled (self.path,self.exp_path,self.name,scales)
+        self.testpolyline_scaled = testPolylineScaled (self.path,self.exp_path,self.name,scales)
 
     def create_testpolyline_scaled_z(self,scales,unit):       
 
-        self.testpolyline_scaled_z  = testPolylineScaledZ (self.path,self.exp_path,self.name,scales,unit)
+        self.testpolyline_scaled_z = testPolylineScaledZ (self.path,self.exp_path,self.name,scales,unit)
 
     def create_testcube(self):       
 
-        self.testcube  = testCube ()
+        self.testcube = testCube ()
 
     def create_testtriangle(self):
         
-        self.testtriangle  = testTriangle () 
+        self.testtriangle = testTriangle () 

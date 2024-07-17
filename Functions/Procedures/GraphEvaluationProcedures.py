@@ -84,16 +84,16 @@ def graph_undirected_procedure (obj,**kwargs):
 def graph_direct_procedure (obj,**kwargs):
 
     # LabelledMesh init
-    path = kwargs ['path'] 
-    id = kwargs ['id']
-    preprocessed = kwargs ['preprocessed']
+    # path = kwargs ['path'] 
+    # id = kwargs ['id']
+    # preprocessed = kwargs ['preprocessed']
     # labelfilepath = kwargs ['labelfilepath']
 
     prep_graph_mesh_procedure(obj,**kwargs)
 
     # scales
     radius_scale = kwargs ['radius_scale'] 
-    circumference_scale = kwargs ['circumference_scale'] 
+    circumference = kwargs ['circumference'] 
 
     # # Data import 
     # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
@@ -118,7 +118,7 @@ def graph_direct_procedure (obj,**kwargs):
     # obj.polineline_segmenting()
     # obj.segment_to_graph()
 
-    obj.create_undirected_model(radius_scale,circumference_scale)
+    obj.create_undirected_model(radius_scale,circumference)
 
 # @timing
 def graph_direct_network_parameter_procedure (obj,**kwargs):
@@ -180,7 +180,7 @@ def graph_direct_parameter_procedure (obj,**kwargs):
 
     # scales
     radius_scale = kwargs ['radius_scale'] 
-    circumference_scale = kwargs ['circumference_scale'] 
+    circumference = kwargs ['circumference'] 
 
     is_phase = kwargs ['is_phase'] 
     params = kwargs ['params']  
@@ -209,7 +209,7 @@ def graph_direct_parameter_procedure (obj,**kwargs):
     # obj.segment_to_graph()
 
 
-    obj.create_undirected_model(radius_scale,circumference_scale)
+    obj.create_undirected_model(radius_scale,circumference)
 
     obj.export_graphs_labels()
     

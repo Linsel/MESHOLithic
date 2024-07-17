@@ -133,14 +133,16 @@ class MSIIPline(PolylineGraphs):
         # self.polygraphs = polygraphs
 
     @timing
-    def calc_II_new_sphere (self,max_radius,n_radii):
+    def calc_II_new_sphere (self,maxrad,nradii):
 
-        self.max_radius = max_radius
-        self.n_rad = n_radii
+        self.maxrad = maxrad
+        self.nrad = nradii
 
         self.polylinedata = {}
 
-        self.radii = np.linspace(0.1, max_radius, n_radii)
+        start = maxrad / self.nrad 
+
+        self.radii = np.linspace(start, maxrad, self.nrad)
 
         self.iterate_polygraphs_new_sphere()
 
@@ -326,17 +328,18 @@ class MSIIPline(PolylineGraphs):
         self.angle_feature_vector = {node:[list(angle['angle'])[0] for angle in  II.values()] for node, II in self.dict_angle.items()}
         write_feature_vectors_txt_file (self.angle_feature_vector,
                                         ''.join([self.path, self.id]),
-                                        '_ang-vec-n{:02d}.txt'.format(self.nrad)) 
+                                        '_ang-vec-n{:02d}-r{:.2f}.txt'.format(self.nrad,self.maxrad)) 
+                                        
         
         self.max_angle = {node: max(angle_list, key=abs) for node, angle_list in self.angle_feature_vector.items()}
         write_funvals_txt_file (self.max_angle,
                                 ''.join([self.path, self.id]),
-                                '_max-ang-vec-n{:02d}.txt'.format(self.nrad))
+                                '_max-ang-vec-n{:02d}-r{:.2f}.txt'.format(self.nrad,self.maxrad)) 
 
         self.distance_feature_vector = {node:[dist['dist_total'] for dist in II.values()] for node, II in self.dict_dist.items()}
         write_feature_vectors_txt_file (self.distance_feature_vector,
                                         ''.join([self.path, self.id]),
-                                        '_dst-vec-n{:02d}.txt'.format(self.nrad)) 
+                                        '_dst-vec-n{:02d}-r{:.2f}.txt'.format(self.nrad,self.maxrad)) 
 
         
     # generate dictioaries for exporting angle as function values

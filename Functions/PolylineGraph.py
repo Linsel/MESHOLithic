@@ -170,7 +170,7 @@ def get_cycle(G:nx.graph):
 #########################################################
 # CO Concavity
 
-def ridge_inside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
+def ridge_inside_mean_curv(path,id,preprocessed,n_rad, radius,dict_label,label_arr):
 
     label_arr_mean = {  vert:{nei: float(np.mean(params,axis=0))
                                 for nei,params in neighs.items()
@@ -189,7 +189,7 @@ def ridge_inside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
     df.to_csv(  ''.join([path,
                          id,
                          preprocessed,
-                         '-'.join(['_inside','mean','curv','r{}_labels'.format(radius)]),
+                         '-'.join(['_inside','mean','curv',f'{n_rad:02d}',f'r{radius:.2f}','labels']),
                          '.txt']), 
                 mode='w',
                 header=False, 
@@ -198,7 +198,7 @@ def ridge_inside_mean_curv(path,id,preprocessed,radius,dict_label,label_arr):
     
     return label_arr_mean
 
-def ridge_inside_angle_normals(path,id,preprocessed,normals,radius,dict_label,label_arr):
+def ridge_inside_angle_normals(path,id,preprocessed,normals,n_rad,radius,dict_label,label_arr):
 
     label_arr_mean = {  vert:{nei: angle_between_vectors(normals[vert],
                                     [0,0,0],
@@ -221,7 +221,7 @@ def ridge_inside_angle_normals(path,id,preprocessed,normals,radius,dict_label,la
     df.to_csv(  ''.join([path,
                          id,
                          preprocessed,
-                         '-'.join(['_inside','mean','curv','r{}_labels'.format(radius)]),
+                         '-'.join(['_inside','mean','curv',f'{n_rad:02d}',f'r{radius:.2f}','labels']),
                          '.txt']), 
                 mode='w',
                 header=False, 

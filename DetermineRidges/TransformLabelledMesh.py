@@ -92,7 +92,8 @@ class TransformLabelledMesh (LabelledMesh):
                     try:
                         labels[vert] = max(set(max_list), key = max_list.count)      
                     except:
-                        print(vert)   
+                        pass
+                        # print(vert)   
 
             i += 1
 

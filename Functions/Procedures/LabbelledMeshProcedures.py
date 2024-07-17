@@ -23,24 +23,31 @@ from minions.MeshMinions import update_vertex_label#,update_vertex_quality
 @timing
 def update_label_procedure (obj,**kwargs):
 
+    """         
+    
+    """
+
+
     path = kwargs['path']
     id = kwargs['id']
     preprocessed = kwargs['preprocessed']
     labelfilepath = kwargs['labelfilepath']
+    dict_label = obj.dict_label
+    vertices = obj.vertices 
+    faces = obj.faces
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
+    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
 
-    dict_label = obj.dict_label 
+    # dict_label = obj.dict_label 
 
     new_label = np.array([dict_label[n] for n,_ in enumerate(dict_label.items())])
 
     file_path = ''.join([labelfilepath [:-4],'.ply'])
 
-    tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
+    # tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
 
-    update_vertex_label(tri_mesh,new_label.astype(np.int32),file_path)
+    update_vertex_label(vertices,faces,new_label.astype(np.int32),file_path)
 
-    del tri_mesh
 
 @timing
 def ridge_prepare_procedure (obj,**kwargs):

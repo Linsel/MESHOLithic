@@ -78,7 +78,7 @@ def color_to_scar_labels_procedure(obj,**kwargs):
     # color_to_label(**kwargs)
     color_to_labels (**kwargs)
 
-    CC_label = ''.join([kwargs['path'], kwargs['id'],kwargs['preprocessed'],'_CC-labels.txt'])
+    CC_label = ''.join([kwargs['path'], kwargs['id'],'_CC-labels.txt']) 
 
     kwargs.update({'labelfilepath':CC_label})
 
@@ -88,10 +88,9 @@ def color_to_scar_labels_procedure(obj,**kwargs):
 
     update_label_procedure(obj,**kwargs)
 
-    scar_label = ''.join([kwargs['path'], kwargs['id'],kwargs['preprocessed'],'_scar-labels.txt'])
+    scar_label = ''.join([kwargs['path'], kwargs['id'],'_scar-labels.txt'])
 
     kwargs.update({'labelfilepath':scar_label})
-
 
     update_label_procedure(obj,**kwargs)
 
