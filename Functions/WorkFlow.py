@@ -54,14 +54,16 @@ def run_workflow (path:str,
 
     export_workflow(path, folder, workflow, steps)
 
-    paths_subfolders = get_file_paths_subfolders (path, folder)
+    for step in workflow.values():      
 
-    for i,step in workflow.items():        
-
+        paths_subfolders = get_file_paths_subfolders (path, folder)
+        
         dir_dict = create_directory_dictionary ('/'.join([path,folder]))
         last_step = max([int(key.split('_')[-2]) for key in dir_dict.keys()])
-        missing_file = False
+
         for ind,processes in paths_subfolders.items():
+
+            missing_files = []            
             
             try:
                 if ind == '':
@@ -75,38 +77,49 @@ def run_workflow (path:str,
 
             files_preprocesses =  {process for values in paths_subfolders.values() for process in values.keys()}
 
-            if missing_file != False:
+            if step['name'] in files_preprocesses:
+                print('All processes of ',step['name'], 'were already created.')
+                continue            
+
+            if len(missing_files) > 0:
                 break
             else:
                 print(ind)
 
-            if 'linkname' in step['variables'].keys():
-                linkfilepath = error_missing_data (ind,processes,"LINK", step['variables'],'linkname')
-                if linkfilepath == None:
-                    missing_file = 'linkname'
+            filepaths = {}
+
+            # defining list of secondary datasets needed to proceed with the procedure
+            secondary_data = {'linkname':'linkfilepath','labelname':'labelfilepath','nodesname':'nodefilepath'}
+
+            for name,filepath in secondary_data.items():
+
+                if name in step['variables'].keys():      
+                    filepaths [filepath] = error_missing_data_multiple (ind,processes,files_preprocesses, step['variables'],name)
+                    
+                    # if filepath not in filepaths.keys():    
+                    #     print(2)
+                    #     filepaths [filepath] = error_missing_data_multiple (ind,processes,files_preprocesses, step['variables'],name)  
+
+                    # elif filepaths [filepath] == None:
+                    #     print(2.2)
+                    #     filepaths [filepath] = error_missing_data_multiple (ind,processes,files_preprocesses, step['variables'],name)
+                else:
                     continue
 
-            if 'labelname'in step['variables'].keys():
-                labelfilepath = error_missing_data (ind,processes,"ANNO", step['variables'],'labelname')
-
-                if labelfilepath == None:
-                    missing_file = 'labelname'
-                    continue
-                
-            if 'nodesname' in step['variables'].keys():
-                nodefilepath = error_missing_data (ind,processes,"LINK", step['variables'],'nodesname')
-                
-                if nodefilepath == None:
-                    missing_file = 'nodesname'
+                if filepath not in filepaths.keys():
                     continue
 
-            if step['name'] in files_preprocesses:
-                print('All processes of ',step['name'], 'were already created.')
-                continue
+                if filepaths [filepath] == None:
+                    missing_files.append([filepath])
+                    continue                    
 
             print('All required datasets are available and the process is continuing.')   
 
-            subfolder = ply_file.split('/')[-2]
+            if 'subfolder' not in step['variables'].keys():
+                subfolder = ply_file.split('/')[-2]
+
+            elif 'subfolder' in step['variables'].keys():
+                subfolder = step['variables']['subfolder']
 
             folder_path = '/'.join(['/'.join(ply_file.split('/')[:-1]),''])
 
@@ -118,18 +131,14 @@ def run_workflow (path:str,
                         'class':step['class'],
                         'method':step['method'],
                         'subfolder':subfolder}
-
+            
             if 'parameters' in step['variables'].keys():
                 temp_kwargs['parameters'] = step['variables']['parameters']
 
-            if 'labelname' in step['variables'].keys():
-                temp_kwargs['labelfilepath'] = labelfilepath
-                
-            if 'linkname' in step['variables'].keys():
-                temp_kwargs['linkfilepath'] = linkfilepath    
+            temp_kwargs.update (filepaths)
 
             if 'nodesname' in step['variables'].keys():
-                df = pd.read_csv (nodefilepath,sep=",")
+                df = pd.read_csv (temp_kwargs['nodefilepath'],sep=",")
 
                 values_dict = {row['gt_label']:row['phase'] for _, row in df.iterrows()}
 
@@ -141,13 +150,12 @@ def run_workflow (path:str,
 
             procedures (**temp_kwargs)
 
-            # folder_dict = [file for process, files in processes.items() for file in files if step['derived_from'] == process]
+        if len(missing_files) > 0:
 
-            # move_resulting_files(path,folder,step,folder_path,folder_dict,last_step)
+            print ("Unfortunately, some files (including {}) needed to terminate all processes for {} are missing.".format(', '.join(missing_files[:2]), ind))
 
-        if missing_file != False:
-
-            print ("Unfortunately, some files (including {}) needed to terminate all processes for {} are missing.".format(missing_file, ind))
+        elif 'subfolder' not in locals():
+            continue
 
         else:
 
@@ -156,6 +164,7 @@ def run_workflow (path:str,
                                                             for process,files in processes.items() 
                                                                 for file in files if process == step['derived_from']]
                             }
+            
             move_resulting_files(path,folder,subfolder,step,folder_dict,last_step)
 
         

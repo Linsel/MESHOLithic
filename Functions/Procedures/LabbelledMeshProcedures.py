@@ -32,17 +32,18 @@ def update_label_procedure (obj,**kwargs):
     id = kwargs['id']
     preprocessed = kwargs['preprocessed']
     labelfilepath = kwargs['labelfilepath']
-    dict_label = obj.dict_label
+    # dict_label = obj.dict_label
     vertices = obj.vertices 
     faces = obj.faces
 
-    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
 
-    # dict_label = obj.dict_label 
+    dict_label = obj.dict_label 
 
     new_label = np.array([dict_label[n] for n,_ in enumerate(dict_label.items())])
 
     file_path = ''.join([labelfilepath [:-4],'.ply'])
+
 
     # tri_mesh = trimesh.load(''.join([path, id, preprocessed, '.ply']))
 
@@ -165,20 +166,5 @@ def export_ridges_mesh_procedure (obj,**kwargs):
                                     '.ply']),
                                     file_type='ply')
 
-@timing
-def direct_graph_area_procedure (obj,**kwargs):
 
-    path = kwargs ['path'] 
-    id = kwargs ['id']
-    preprocessed = kwargs ['preprocessed']
-    labelfilepath = kwargs ['labelfilepath']
 
-    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
-
-    obj.get_label_submeshes()    
-
-    edges = get_manual_edges(path, id)
-
-    obj.area = {n:label[0].area for n,label in obj.submeshes.items()}
-
-    directededges_parameters(path,id,edges,obj.area,'area')

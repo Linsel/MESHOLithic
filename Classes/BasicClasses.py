@@ -426,7 +426,7 @@ class manualEdges:
         self.path = path
         self.id = id          
 
-        edge_df = pd.read_csv(''.join([self.path,self.id,'_links','.csv']),
+        edge_df = pd.read_csv(''.join([self.path,self.id,'links','.csv']),
                                 sep=',',header=0)
 
         

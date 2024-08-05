@@ -113,6 +113,6 @@ def ridge_to_scar_labels_procedure(obj,**kwargs):
 
     scar_label = ''.join([kwargs['preprocessed'],'_scar-labels'])
 
-    kwargs.update({'labelname':scar_label})
+    kwargs.update({'labelfilepath':scar_label})
 
     update_label_procedure(obj,**kwargs)

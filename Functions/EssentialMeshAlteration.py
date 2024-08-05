@@ -84,16 +84,30 @@ def create_label_submeshes (mesh,labels):
         submeshes (dict): A dictionary of submeshes of the original labelled meshes.
 
     """    
-    
-    selected_faces =   {   label:
-                                    np.all(np.isin(mesh.faces,values), axis=1)
-                                for label,values in labels.items()
-                            }
+    submeshes = {}
+    for label,values in labels.items():
 
-    submeshes = {   label:
-                            mesh.submesh([selected_faces[label]])
-                        for label in labels.keys()
-                    }
+        faces = np.all(np.isin(mesh.faces,values), axis=1)
+
+        submeshes [label] = mesh.submesh([faces])
+
+        del faces
+
+    # selected_faces =   {   label:
+    #                                 np.all(np.isin(mesh.faces,values), axis=1)
+    #                             for label,values in labels.items()
+    #                         }
+    # del labels
+    # submeshes = {}
+
+    # for label,faces in selected_faces.items():
+    #     submeshes [label] = mesh.submesh([faces])
+
+
+    # submeshes = {   label:
+    #                         mesh.submesh([selected_faces[label]])
+    #                     for label in labels.keys()
+    #                 }
 
     return submeshes
 

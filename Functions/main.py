@@ -14,6 +14,7 @@ from DetermineRidges.RidgeAnalysis import LabelledMesh
 from DetermineRidges.TransformLabelledMesh import TransformLabelledMesh
 from Classes.Graph.GraphPlotting import ChaineOperatoire,GraphEvaluation
 from Classes.Paths import Paths
+from Classes.TestClasses.testObjects import testObjects
 
 
 from IntegralInvariants.II1DClasses import MSIIChaineOperatoire
@@ -26,7 +27,7 @@ from Functions.EssentialDecorators import timing
 
 # labelled meshes 
 from Functions.Procedures.LabbelledMeshProcedures import ridge_prepare_procedure,kmeans_label_procedure,kmeans_slice_procedure,label_slice_procedure,centroids_NNs_procedure,export_ridges_mesh_procedure,direct_graph_area_procedure,update_label_procedure
-from Functions.Procedures.SubmeshesProcedures import submeshes_procedure, submeshes_properties_procedure
+from Functions.Procedures.SubmeshesProcedures import submeshes_procedure, submeshes_mean_quality_procedure,submeshes_area_procedure
 
 
 from Functions.Procedures.TransformLabbelledMeshProcedures import scar_to_ridge_labels_binary_procedure,scar_to_ridge_labels_CC_procedure,ridge_CC_to_scar_labels_procedure,color_to_scar_labels_procedure,ridge_to_scar_labels_procedure
@@ -37,12 +38,13 @@ from Functions.Procedures.GraphEvaluationProcedures import graph_undirected_proc
 from Functions.Procedures.ChaineOperatoireProcedures import edge_to_arrow_procedure
 
 # Data processing
-from Functions.Procedures.DataProcedures import merge_data_procedure,single_value_evaluation_procedure
-
-
+from Functions.Procedures.DataProcedures import merge_data_procedure,single_value_evaluation_procedure,xlsx_to_csv_sheets_procedure
 
 # Image processing
 from Functions.Procedures.ImageProcedures import annotation_image_procedure
+
+# Image processing
+from Functions.Procedures.TestObjectsProcedures import polyline_MSII_procedure
 
 # minions
 from minions.GigaMeshMinions import command_line_GigaMesh,MSII_single_feature
@@ -67,7 +69,8 @@ def labelledmesh_procedures (obj:LabelledMesh = None,
                   'direct_graph_area':direct_graph_area_procedure,
                   'export_ridges_mesh':export_ridges_mesh_procedure,
                   'submeshes':submeshes_procedure,
-                  'submeshes_properties':submeshes_properties_procedure,
+                  'submeshes_mean_quality':submeshes_mean_quality_procedure,
+                  'submeshes_area':submeshes_area_procedure,
                   'update_label':update_label_procedure}
 
     func = procedures.get(method)
@@ -124,7 +127,7 @@ def MSII_chaineoperatoire_procedures (obj:MSIIChaineOperatoire = None,
 @timing
 def graph_procedures (  obj:GraphEvaluation = None,
                         **kwargs):
-    
+    print(1)
     method = kwargs['method']
 
     # obj = GraphEvaluation ()
@@ -220,11 +223,26 @@ def image_procedures(obj: object = None,
 def data_procedures(obj: object = None, 
                         **kwargs):
 
-
     method = kwargs['method']
 
     procedures = {'merge_data':merge_data_procedure,
-                  'single_value_evaluation':single_value_evaluation_procedure}
+                  'single_value_evaluation':single_value_evaluation_procedure,
+                  'xlsx_to_csv_sheets':xlsx_to_csv_sheets_procedure
+                  }
+
+    func = procedures.get(method)
+
+    func(obj,**kwargs)
+
+    return obj  
+
+def testObjects_procedures(obj: object = None, 
+                        **kwargs):
+
+
+    method = kwargs['method']
+
+    procedures = {'polyline_MSII':polyline_MSII_procedure}
 
     func = procedures.get(method)
 
@@ -237,9 +255,7 @@ def data_procedures(obj: object = None,
 def procedures (obj: object = None, 
                 **kwargs):
     
-    
     class_type = kwargs['class']
-    
 
     objects = { 'labelledmesh':LabelledMesh,
                 'transform_labelledmesh':TransformLabelledMesh,
@@ -250,7 +266,8 @@ def procedures (obj: object = None,
                 'Helpers':object,
                 'PATH':Paths,
                 'IMAGE':object,
-                'DATA':object}
+                'DATA':object,
+                'testObjects':testObjects}
 
     if obj == None:
         obj_func = objects.get(class_type)
@@ -265,7 +282,8 @@ def procedures (obj: object = None,
                   'Helpers':helper_procedures,
                   'PATH':path_procedures,
                   'IMAGE':image_procedures,
-                  'DATA':data_procedures}
+                  'DATA':data_procedures,
+                  'testObjects':testObjects_procedures}
 
     func = procedures.get(class_type)
 

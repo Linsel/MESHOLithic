@@ -26,7 +26,7 @@ def evaluate_directed_edges (GT,RES):
     """
 
     # dictionary of edges, which are either be correctly (1) or incorrectly (0) directed
-    eval_edge_direction = {edge:(1 if edge in RES else 0) for edge in GT}
+    eval_edge_direction = {str(edge):(1 if edge in RES else 0) for edge in GT}
 
     # count of correctly directed edges (1) 
     eval_para_sum = sum([val for val in eval_edge_direction.values() if val == 1])

@@ -80,7 +80,7 @@ class testMesh ():
 
         self.dict = dict(enumerate(self.label))
 
-        write_labels_txt_file (self.dict,self.path + self.name + '_label') 
+        write_labels_txt_file (self.dict,self.path + self.id + '_label') 
 
     def create_3clique_list(self):
 
@@ -129,14 +129,14 @@ class testMesh ():
 
         # # save as ply
         ply_data = PlyData([el_verts, el_faces])
-        ply_filename_out = "{}{}{}.ply".format(self.path,self.name,ending)
+        ply_filename_out = "{}{}{}.ply".format(self.path,self.id,ending)
         ply_data.write(ply_filename_out)
 
 class testPolyline ():
 
-    def __init__(self,path,exp_path,name):
+    def __init__(self,path,id):
 
-        self.path,self.exp_path,self.name  = path,exp_path,name 
+        self.path,self.id  = path,id 
 
         self.create_basic_info()
 
@@ -158,13 +158,13 @@ class testPolyline ():
         nx.set_node_attributes(self.DiG, attr, attr_name)        
 
     def create_basic_info(self):
-        self.name = 'testpolyline'
+        self.id = 'testpolyline'
         self.vertices = 6
         self.faces = 0
         self.polylines = 1
 
         self.dict_mesh_info =   {
-                            'Mesh' :    self.name,
+                            'Mesh' :    self.id,
                             'Vertices': self.vertices,
                             'Faces' :   self.faces,
                             'Polylines':self.polylines
@@ -181,7 +181,7 @@ class testPolyline ():
 
         self.pline.nodes = self.G.nodes
 
-        self.pline.path,self.pline.exp_path, self.pline.name  = self.path,self.exp_path,self.name 
+        self.pline.path, self.pline.id  = self.path,self.id 
         
         self.pline.dict_mesh_info = self.dict_mesh_info
 
@@ -226,9 +226,9 @@ class testTriangle ():
 
 class testPolylineScaled ():
 
-    def __init__(self,path,exp_path,name,scales):    
+    def __init__(self,path,id,scales):    
 
-        self.path,self.exp_path,self.name = path,exp_path,name         
+        self.path,self.id = path,id         
 
         testpolyline = testPolyline()
 
@@ -258,11 +258,11 @@ class testPolylineScaled ():
 
 class testPolylineScaledZ ():
 
-    def __init__(self,path,exp_path,name,multi_scales,unit):    
+    def __init__(self,path,id,multi_scales,unit):    
 
-        self.path,self.exp_path,self.name = path,exp_path,name   
+        self.path,self.id = path,id   
 
-        testpolyline = testPolyline(path,exp_path,name)
+        testpolyline = testPolyline(path,id)
 
         self.testpolylines = {n:self.create_digraph(testpolyline.nodes, testpolyline.edges, scales,unit) 
                               for n,scales in enumerate(multi_scales)}
@@ -312,9 +312,9 @@ class testCube ():
         ax = fig.add_subplot(111, projection='3d')
         ax.plot_trisurf(self.sub_box.vertices[:, 0], self.sub_box.vertices[:,1], triangles=self.sub_box.faces, Z=self.sub_box.vertices[:,2]) 
 
-def testProfileMeshFromSVG (filepath,name,edge):    
+def testProfileMeshFromSVG (filepath,id,edge):    
 
-        labeled_path = create_svg_paths_to_labeled_path (filepath,name)
+        labeled_path = create_svg_paths_to_labeled_path (filepath,id)
         vertices,dict_label = extract_coordinates_from_svg(labeled_path)
         path_dist = sum([distance.euclidean (vertices[i],vertices[i+1]) for i in range(len(vertices)-1)])
 
@@ -322,26 +322,25 @@ def testProfileMeshFromSVG (filepath,name,edge):
                 'dist': path_dist}
 
 
-        create_mesh_from_polyline(filepath,name,edge,path,vertices,dict_label)
+        create_mesh_from_polyline(filepath,id,edge,path,vertices,dict_label)
     
 
 class testObjects():
     def __init__(self):
         pass
 
-    def preparing(self,path,exp_path,name):
+    def preparing(self,path,id):
 
         self.path = path
-        self.exp_path = exp_path
-        self.name = name
+        self.id = id
 
     def create_testpolyline(self):
 
-        self.testpolyline = testPolyline (self.path,self.exp_path,self.name)
+        self.testpolyline = testPolyline (self.path,self.id)
             
     def create_testProfileMeshFromSVG(self,edge):
 
-        testProfileMeshFromSVG(self.path,self.name,edge)
+        testProfileMeshFromSVG(self.path,self.id,edge)
 
     def create_testmesh_labeled(self):
 
@@ -349,11 +348,11 @@ class testObjects():
      
     def create_testpolyline_scaled(self,scales):       
 
-        self.testpolyline_scaled = testPolylineScaled (self.path,self.exp_path,self.name,scales)
+        self.testpolyline_scaled = testPolylineScaled (self.path,self.id,scales)
 
     def create_testpolyline_scaled_z(self,scales,unit):       
 
-        self.testpolyline_scaled_z = testPolylineScaledZ (self.path,self.exp_path,self.name,scales,unit)
+        self.testpolyline_scaled_z = testPolylineScaledZ (self.path,self.id,scales,unit)
 
     def create_testcube(self):       
 

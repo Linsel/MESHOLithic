@@ -9,7 +9,7 @@ from util import *
 # compare two operational sequences 
 from Functions.EvaluateGraph import directed_edges_parameters, export_links,direct_edges_w_parameter,direct_edges_w_phase,export_graphs_json
 
-from Functions.EssentialEdgesFunctions import get_manual_edges
+from Functions.EssentialEdgesFunctions import get_manual_links#get_manual_edges,export_links,export_links_eval
 
 def prep_graph_mesh_procedure(obj,**kwargs):
 
@@ -127,45 +127,30 @@ def graph_direct_network_parameter_procedure (obj,**kwargs):
     path = kwargs ['path'] 
     id = kwargs ['id']
     preprocessed = kwargs ['preprocessed']
-    # labelfilepath = kwargs ['labelfilepath']
+    linkfilepath = kwargs ['linkfilepath']
 
     prep_graph_mesh_procedure(obj,**kwargs)
 
-    # labelfilepath = kwargs ['labelfilepath']
-
-    # # Data import 
-    # obj.load_labelled_mesh(path,id,preprocessed,labelfilepath) 
-    # obj.extract_ridges()
-
-    # # get polylines
-    # obj.edges_to_polygraphs()
-    # obj.polygraphs_to_polylines()
-
-    # # create node coordinates
-    # obj.get_centroids()
-    # # obj.get_NNs()
-    # # obj.get_NNs()
-
-    # # prepare for creating MSII1D_Pline object 
-    # obj.create_normals_vertices()
-    # obj.create_dict_mesh_info()
-    # obj.prepare_polyline()
-
-    # # prepare for get ridges and for scar-ridge-graph model and leading to chaine-operatoire 
-    # obj.prep_ridges()
-    # obj.polineline_segmenting()
-    # obj.segment_to_graph()
 
     obj.G_network_parameters = {
-                            'degree': nx.degree(obj.G_ridges),
-                            'betweenness': nx.betweenness_centrality(obj.G_ridges)
-                            }
-    
-    edges = obj.G_ridges.edges 
+                        'degree': nx.degree(obj.G_ridges),
+                        'degree_centrality':nx.degree_centrality(obj.G_ridges),
+                        'betweenness': nx.betweenness_centrality(obj.G_ridges)
+                        }
+    edges = get_manual_links (linkfilepath)
 
     for k,v in obj.G_network_parameters.items():
 
         directed_edges_parameters(path,id,edges,v,k)
+
+    # Convert the dictionary to a JSON string
+    json_data = json.dumps(obj.G_network_parameters, indent=3)
+
+    graph_file = ''.join([path,id,'_'.join([preprocessed,'graph-params.json'])])
+
+    # Save the JSON string to a file
+    with open(graph_file, 'w') as f:
+        f.write(json_data)  
 
 # @timing
 def graph_direct_parameter_procedure (obj,**kwargs):
@@ -231,12 +216,13 @@ def graph_evaluate_procedure (obj,**kwargs):
     id = kwargs ['id']
     para_name = kwargs ['para_name'] 
     parameter = kwargs ['parameter'] 
+    linkfilepath = kwargs ['linkfilepath']  
 
     # graph_evaluation_procedure(obj,**kwargs)    
 
     # obj.get_label_submeshes()    
 
-    edges = get_manual_edges(path, id)
+    edges = get_manual_links (linkfilepath)#edges = get_manual_edges(path, id)
 
     # area = {n:label[0].area for n,label in obj.submeshes.items()}
 

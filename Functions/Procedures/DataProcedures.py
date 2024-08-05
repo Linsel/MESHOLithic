@@ -4,6 +4,9 @@ currentdir = os.getcwd()
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
+from scipy import stats
+
+
 from util import *
 
 from minions.DataMinions import *
@@ -12,9 +15,12 @@ from minions.LabelMinions import label_import
 from minions.EdgeMinions import *
 
 
+
+
 from Functions.EssentialEdgesFunctions import get_manual_edges
 
 from Functions.exportFiles.writeTxt import write_funvals_txt_file
+from Functions.exportFiles.writeJson import write_dictionary_w_indent_json
 from Functions.EvaluateGraph import evaluate_directed_edges
 
 def merge_data_procedure (obj,**kwargs):
@@ -65,15 +71,22 @@ def single_value_evaluation_procedure (obj,**kwargs):
     graph_ext  = kwargs["graph_ext"]
     single_vec_list = kwargs["single_vec_list"]
 
+    funcs = {'mean':np.mean,
+             'median':np.median,
+             'std':np.std,
+            #  'argmax':np.argmax,
+            #  'argmin':np.argmin,
+             'hmean': stats.gmean}
+
+    
     edges_path = get_file_paths_filtered(**{'path':path,'folder':folder,'filename':links_ext})
 
     graphs = get_file_paths_filtered(**{'path':path,'folder':folder,'filename':graph_ext})
 
     for file,filepath in graphs.items():
         
-        acc_edges = {'E':{},
-                        'E_rev':{}}
-        
+        acc_edges = {file:{}}
+
         edges = get_manual_edges(edges_path [file][:-len(links_ext)], '')
 
         # if simp_edges == None:
@@ -88,48 +101,83 @@ def single_value_evaluation_procedure (obj,**kwargs):
 
         # file_ncols contains the number of columns per imported file 
         df,file_ncols = merge_data_simple(file_paths)
-        print(file_ncols)
+
 
         df.columns = [n+1 for n,_ in enumerate(df.columns)]
                 
         # calculates the mean value of all parameters per node of all edges
-        edge_mean = {k:{c:np.mean ([df[c][n] if n in df[c].index else 0 for n in vals['nodes']], dtype = np.float32) for c in df.columns[1:]} for k,vals in G_edges.items()}
+        edge_params = {func_name:{k:{c:func([df[c][n] if n in df[c].index else 0 for n in vals['nodes']]) for c in df.columns[1:]} for k,vals in G_edges.items() } for func_name,func in funcs.items() }
 
         # import updated border labels
         border_path = list(get_file_paths_filtered(**{'path':path,'folder':folder,'filename':f'updated-labels-bt{border_thickness}.txt'}).values())[0]
         borders = label_import(border_path)
 
         for n,c in enumerate(df.columns[1:]):
+            for func_name,edge_param in edge_params.items():
 
-            # assigns mean value of regarded vertices to all vertices in bordering parts
-            edge_mean_border = {k:np.format_float_positional(edge_mean[str(val)][c]) for k,val in borders.items()} 
-            filename = f"{file}_{file_ncols[n+1][:-4]}-{str(n+1)}.txt"  
-            edge_mean_vals_path =  f"{path}{folder}/{subfolder}/"  # [:-5]]) 
+                acc_edges [file] [func_name] = {}
 
-            write_funvals_txt_file (edge_mean_border, edge_mean_vals_path,filename)   
 
-            edge_mean_vals = {tuple(G_edges[str(val)] ['edge']):np.float32(np.format_float_positional(edge_mean[str(val)][c])) for k,val in borders.items()}   
+                # assigns mean value of regarded vertices to all vertices in bordering parts
+                edge_param_border = {k:np.format_float_positional(edge_param[str(val)][c]) for k,val in borders.items()} 
+                filename = f"{str(n)}_{file}_{file_ncols[n+1][:-4]}.txt"  
+                edge_param_vals_path =  f"{path}{folder}/{subfolder}/"  # [:-5]]) 
 
-            edge_set = set(edge_mean_vals.keys())
+                write_funvals_txt_file (edge_param_border, edge_param_vals_path,filename)   
 
-            ridge_pairs = get_ridge_pairs(edge_set,edge_mean_vals)
+                edge_param_vals = {tuple(G_edges[str(val)] ['edge']):np.float32(np.format_float_positional(edge_param[str(val)][c])) for k,val in borders.items()}   
 
-            directed_edges_dict = get_directed_edges(ridge_pairs)
+                edge_set = set(edge_param_vals.keys())
 
-            directed_edges = {edge for edge in directed_edges_dict.keys() if edge in edges or (edge[1],edge[0]) in edges}
-            directed_edges_rev = {(k[1],k[0]) for k in directed_edges}
-            
-            # directed_edges_simp = {edge for edge in directed_edges if edge in simp_edges or  (edge[1],edge[0]) in simp_edges}     
-            # directed_edges_simp_rev = {(k[1],k[0]) for k in directed_edges_simp}       
-            
-            acc_edges ['E'].update({n:evaluate_directed_edges(directed_edges,edges)})
-            # print("Edge:",acc_edges ['E'][n][1])
+                ridge_pairs = get_ridge_pairs(edge_set,edge_param_vals)
 
-            acc_edges ['E_rev'].update({n:evaluate_directed_edges(directed_edges_rev,edges)})
-            # print("Edge Rev:",acc_edges ['E_rev'][n][1])           
+                directed_edges_dict = get_directed_edges(ridge_pairs)
 
-            # acc_edges ['E_simp'].update({n:evaluate_directed_edges(directed_edges_simp,simp_edges)}) 
-            # # print("Edge Simp:",acc_edges['E_simp'][n][1])
+                directed_edges = {edge for edge in directed_edges_dict.keys() if edge in edges or (edge[1],edge[0]) in edges}
+                directed_edges_rev = {(k[1],k[0]) for k in directed_edges}
+                
+                # directed_edges_simp = {edge for edge in directed_edges if edge in simp_edges or  (edge[1],edge[0]) in simp_edges}     
+                # directed_edges_simp_rev = {(k[1],k[0]) for k in directed_edges_simp}       
+                
+                acc_edges [file] [func_name].update({'E':{n:evaluate_directed_edges(directed_edges,edges)}})
+                acc_edges [file] [func_name].update({'E_rev':{n:evaluate_directed_edges(directed_edges_rev,edges)}})
+                # # print("Edge:",acc_edges ['E'][n][1]) 
 
-            # acc_edges ['E_simp_rev'].update({n:evaluate_directed_edges(directed_edges_simp_rev,simp_edges)})
-            # # print("Edge Simp Rev:",acc_edges['E_simp_rev'][n][1])            
+    filepath = f'{path}/{folder}/{subfolder}/edge-eval.json'
+
+    write_dictionary_w_indent_json (filepath,acc_edges,4)
+        
+    # for filen, acc_edge in acc_edges.items():
+    #     print(filen)
+    #     for func_name, accs in acc_edge.items():
+    #         print(func_name)
+    #         print_accuracy_edges(accs)
+        
+
+def xlsx_to_csv_sheets_procedure (obj,**kwargs):
+
+    path = kwargs ['path']
+    folder = kwargs ['folder']
+    subfolder = kwargs["subfolder"]    
+    filename = kwargs ['filename']
+
+    filepath = f'{path}/{folder}/{subfolder}/{filename}.xlsx'
+
+
+    # Load the Excel file
+    excel_data = pd.ExcelFile(filepath)
+
+    # Iterate over each sheet
+    for sheet_name in excel_data.sheet_names:
+        # Read the sheet into a DataFrame
+        df = pd.read_excel(filepath, sheet_name=sheet_name)
+
+        sheet_name = sheet_name.replace('.','-')
+        sheet_name = sheet_name.replace('"','')
+        
+        # Create a CSV file name based on the sheet name
+        csv_file = f"{path}/{folder}/{subfolder}/{filename}{sheet_name}_nodes.csv"
+        
+        # Save the DataFrame to a CSV file
+        df.to_csv(csv_file, index=False)
+        # print(f"Saved {csv_file}")
