@@ -127,7 +127,7 @@ def MSII_chaineoperatoire_procedures (obj:MSIIChaineOperatoire = None,
 @timing
 def graph_procedures (  obj:GraphEvaluation = None,
                         **kwargs):
-    print(1)
+
     method = kwargs['method']
 
     # obj = GraphEvaluation ()
@@ -225,7 +225,8 @@ def data_procedures(obj: object = None,
 
     method = kwargs['method']
 
-    procedures = {'merge_data':merge_data_procedure,
+    procedures = {
+                  'merge_data':merge_data_procedure,
                   'single_value_evaluation':single_value_evaluation_procedure,
                   'xlsx_to_csv_sheets':xlsx_to_csv_sheets_procedure
                   }

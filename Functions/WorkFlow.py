@@ -54,15 +54,24 @@ def run_workflow (path:str,
 
     export_workflow(path, folder, workflow, steps)
 
-    for step in workflow.values():      
+    for step in workflow.values():  
+
+        print('##################################################################################')    
 
         paths_subfolders = get_file_paths_subfolders (path, folder)
-        
+        files_preprocesses =  {process for values in paths_subfolders.values() for process in values.keys()}
+
+        if step['name'] in files_preprocesses:
+            print('All processes of {} were already created.\n'.format(step['name']))
+            continue   
+        else:
+            print('The processing step {} starts\n'.format(step['name']))
+
         dir_dict = create_directory_dictionary ('/'.join([path,folder]))
         last_step = max([int(key.split('_')[-2]) for key in dir_dict.keys()])
 
         for ind,processes in paths_subfolders.items():
-
+                              
             missing_files = []            
             
             try:
@@ -72,19 +81,8 @@ def run_workflow (path:str,
 
             except:
                 continue
-
-            print("The processing step {} starts".format(step['name']))
-
-            files_preprocesses =  {process for values in paths_subfolders.values() for process in values.keys()}
-
-            if step['name'] in files_preprocesses:
-                print('All processes of ',step['name'], 'were already created.')
-                continue            
-
-            if len(missing_files) > 0:
-                break
-            else:
-                print(ind)
+            
+            print('#########################################')  
 
             filepaths = {}
 
@@ -95,14 +93,7 @@ def run_workflow (path:str,
 
                 if name in step['variables'].keys():      
                     filepaths [filepath] = error_missing_data_multiple (ind,processes,files_preprocesses, step['variables'],name)
-                    
-                    # if filepath not in filepaths.keys():    
-                    #     print(2)
-                    #     filepaths [filepath] = error_missing_data_multiple (ind,processes,files_preprocesses, step['variables'],name)  
 
-                    # elif filepaths [filepath] == None:
-                    #     print(2.2)
-                    #     filepaths [filepath] = error_missing_data_multiple (ind,processes,files_preprocesses, step['variables'],name)
                 else:
                     continue
 
@@ -110,8 +101,13 @@ def run_workflow (path:str,
                     continue
 
                 if filepaths [filepath] == None:
-                    missing_files.append([filepath])
+                    missing_files.append(filepath)
                     continue                    
+
+            if len(missing_files) > 0:
+                continue 
+            else:
+                print(f'Starting with {ind}\n')
 
             print('All required datasets are available and the process is continuing.')   
 
@@ -122,7 +118,6 @@ def run_workflow (path:str,
                 subfolder = step['variables']['subfolder']
 
             folder_path = '/'.join(['/'.join(ply_file.split('/')[:-1]),''])
-
 
             file = ply_file.split('/')[-1][:-4]
 
@@ -137,6 +132,8 @@ def run_workflow (path:str,
 
             temp_kwargs.update (filepaths)
 
+            print(step['variables'].keys())
+
             if 'nodesname' in step['variables'].keys():
                 df = pd.read_csv (temp_kwargs['nodefilepath'],sep=",")
 
@@ -144,17 +141,30 @@ def run_workflow (path:str,
 
                 params = {'name':'', 'values':values_dict}
 
-                temp_kwargs['params'] = params                    
+                temp_kwargs['params'] = params          
+
+            else:
+                print (11111110)
+                continue          
 
             temp_kwargs.update(step['variables'])
 
             procedures (**temp_kwargs)
 
-        if len(missing_files) > 0:
+            # try:
+            #     procedures (**temp_kwargs)
 
-            print ("Unfortunately, some files (including {}) needed to terminate all processes for {} are missing.".format(', '.join(missing_files[:2]), ind))
+            #     print('\nProcesses of {} completed.\n'.format(step['name']))
 
-        elif 'subfolder' not in locals():
+            # except:
+            #     print('\nProcesses of {} is incomplete!\n'.format(step['name']))
+
+
+            if len(missing_files) > 0:
+                missing_files_str = ','.join([file for file in missing_files])
+                print (f"Unfortunately, some files (including {missing_files_str}) needed to terminate all processes for {ind} are missing.")
+
+        if 'subfolder' not in locals():
             continue
 
         else:

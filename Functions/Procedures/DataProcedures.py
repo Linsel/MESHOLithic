@@ -83,9 +83,11 @@ def single_value_evaluation_procedure (obj,**kwargs):
 
     graphs = get_file_paths_filtered(**{'path':path,'folder':folder,'filename':graph_ext})
 
+    acc_edges = {}
+
     for file,filepath in graphs.items():
         
-        acc_edges = {file:{}}
+        acc_edges [file] = {}
 
         edges = get_manual_edges(edges_path [file][:-len(links_ext)], '')
 

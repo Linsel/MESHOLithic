@@ -78,6 +78,10 @@ def graph_undirected_procedure (obj,**kwargs):
     # obj.polineline_segmenting()
     # obj.segment_to_graph()
 
+    args = [path,id,preprocessed]
+
+    export_links (obj.G_ridges.edges, args)
+
     export_graphs_json(obj.G_ridges, ''.join([path,id,preprocessed,'_G.json']))   
 
 
@@ -132,25 +136,39 @@ def graph_direct_network_parameter_procedure (obj,**kwargs):
     prep_graph_mesh_procedure(obj,**kwargs)
 
 
-    obj.G_network_parameters = {
-                        'degree': nx.degree(obj.G_ridges),
-                        'degree_centrality':nx.degree_centrality(obj.G_ridges),
-                        'betweenness': nx.betweenness_centrality(obj.G_ridges)
+    G_network_parameters = {
+                        'degree':           dict(nx.degree(obj.G_ridges)),
+                        'degree_centrality':dict(nx.degree_centrality(obj.G_ridges)),
+                        'betweenness':      dict(nx.betweenness_centrality(obj.G_ridges))
                         }
+    
+    del obj
+
     edges = get_manual_links (linkfilepath)
 
-    for k,v in obj.G_network_parameters.items():
+    eval_edge_directions = {}
 
-        directed_edges_parameters(path,id,edges,v,k)
+    for k,v in G_network_parameters.items():
+
+        eval_edge_directions [k] = directed_edges_parameters(path,id,edges,v,k) 
 
     # Convert the dictionary to a JSON string
-    json_data = json.dumps(obj.G_network_parameters, indent=3)
+    json_data = json.dumps(G_network_parameters, indent=3)
 
     graph_file = ''.join([path,id,'_'.join([preprocessed,'graph-params.json'])])
 
     # Save the JSON string to a file
     with open(graph_file, 'w') as f:
         f.write(json_data)  
+
+    # Convert the dictionary to a JSON string
+    json_data = json.dumps(eval_edge_directions, indent=3)
+
+    eval_file = ''.join([path,id,'_'.join([preprocessed,'graph-eval.json'])])
+
+    # Save the JSON string to a file
+    with open(eval_file, 'w') as f:
+        f.write(json_data)          
 
 # @timing
 def graph_direct_parameter_procedure (obj,**kwargs):

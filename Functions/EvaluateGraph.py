@@ -67,7 +67,6 @@ def less_equal_greater (edges,para,case):
                 for edge in edges}
 
 def export_links (links,*args):
-    print(args)
 
     write_links_csv_file (links, ''.join ([args[0],
                                            ''.join([arg for arg in args[1:]]),
@@ -80,7 +79,17 @@ def export_links_eval (eval,*args):
                                                ''.join([arg for arg in args[1:]]),
                                                 '_eval_links'
                                             ]))
-                                                                                                         
+
+def convert_sets(obj):
+    if isinstance(obj, set):
+        return list(obj)
+    elif isinstance(obj, dict):
+        return {k: convert_sets(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_sets(i) for i in obj]
+    else:
+        return obj       
+
 def directed_edges_parameters (path,id,edges,para,para_name):
 
     cases = ['less','equal','greater']
@@ -89,30 +98,27 @@ def directed_edges_parameters (path,id,edges,para,para_name):
 
     eval_edge_directions = {}
 
-    print(para_name,':')
-
     for case in cases:
-
-        print(para_name,'({})'.format(case),':')
 
         compare_edges = less_equal_greater (edges,para,case) 
         
         edge_direction, accuracy = evaluate_directed_edges (edges, compare_edges)
  
-        args = [path,id,para_name,case,'acc-{}'.format(str(round(accuracy,2)))]
+        args = [path,'_'.join([id,para_name,case,'acc-{}'.format(str(round(accuracy,2)))])]
 
         export_links (compare_edges,*args)
 
         export_links_eval (edge_direction,*args)
 
+        eval_edge_directions[case] = {'accuracy':accuracy,'edges':list(compare_edges),'case':case,'edge_direction':list(edge_direction)}
+
+    return eval_edge_directions
 
 def direct_edges_w_parameter (path,id,preprocessed,edges,para,para_name):
 
     cases = ['less','equal','greater']
 
     for case in cases:
-
-        print(para_name,'({})'.format(case),':')
 
         compare_edges = less_equal_greater (edges,para,case) 
  
