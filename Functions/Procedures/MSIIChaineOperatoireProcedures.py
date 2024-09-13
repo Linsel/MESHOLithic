@@ -64,7 +64,7 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
     path = kwargs ['path'] 
     id = kwargs ['id']
-    graphname = kwargs ['graphname'] 
+    graphtype = kwargs ['graphtype'] 
     n_rad = kwargs ['n_rad']
     linkfilepath = kwargs ['linkfilepath'] 
     
@@ -92,7 +92,7 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
         obj.get_G_ridge_properties()
 
-        obj.get_DiG_ridge_properties(graphname)
+        obj.get_DiG_ridge_properties(graphtype)
 
         try:
 
@@ -104,7 +104,7 @@ def MSII_feature_vector_procedure (obj,**kwargs):
 
             # print(ridgepairs)
 
-            DiG_ridges_edges [n] = set(obj.DiG_ridges[graphname].edges)
+            DiG_ridges_edges [n] = set(obj.DiG_ridges[graphtype].edges)
 
             edges_turned = {(edge[1],edge[0]) for edge in edges}
 
@@ -127,7 +127,7 @@ def CO_concavity_procedure (obj,**kwargs):
     max_rad = kwargs ['max_rad'] 
     parameters = kwargs ['parameters'] 
     n_rad = kwargs ['n_rad'] 
-    obj.graphname = kwargs ['graphname']
+    obj.graphtype = kwargs ['graphtype']
 
     CO_prepare_procedure(obj,**kwargs)
 
@@ -195,7 +195,7 @@ def CO_angle_procedure (obj,**kwargs):
     max_rad = kwargs ['max_rad'] 
     parameters = kwargs ['parameters'] 
     n_rad = kwargs ['n_rad'] 
-    obj.graphname = kwargs ['graphname']
+    obj.graphtype = kwargs ['graphtype']
 
     CO_prepare_procedure(obj,**kwargs)
 

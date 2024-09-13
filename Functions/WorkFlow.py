@@ -2,29 +2,74 @@ import os,sys,json
 import pandas as pd
 from minions.FolderMinions import *
 
-# currentdir = os.getcwd()
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0, currentdir) 
-# sys.path.insert(0, parentdir) 
-
 from Functions.main import procedures
 
-def export_workflow (path, 
-                     folder, 
-                     workflow,
-                     step):    
+def export_workflow (path:str, 
+                     folder:str, 
+                     workflow:dict,
+                     step:dict):    
+    
     
     workflow_path = "/".join([path,
                               folder,
-                              ''.join(['workflow-',
-                                       '-'.join(step),
-                                       '.json'])
+                              '_'.join(['workflow',
+                                       f'{step}.json'])
                               ])
 
     # workflow export 
 
     with open(workflow_path,"w") as f:
         json.dump(workflow,f)
+
+def update_workflow (workflowpath:str, 
+                     step:dict):    
+    
+    if not os.path.exists(workflowpath):
+        # If the file does not exist, create an empty dictionary and save it as a JSON file
+        workflow = {}
+    else:
+        with open(workflowpath) as handle:
+            workflow = json.loads(handle.read())
+
+    if len(workflow.keys()) != 0:
+        last_item = max([int(k) for k in workflow.keys()])
+    else:
+        last_item = 0
+
+    workflow [last_item+1] = step
+
+    if step["name"] in workflowpath[:-5].split('_'):
+        newworkflowpath = f'{workflowpath[:-5]}.json'
+    else:
+        newworkflowpath = f'{workflowpath[:-5]}_{step["name"]}.json'
+    
+
+    with open(newworkflowpath,"w") as f:
+        json.dump(workflow,f)
+
+def update_processedge (processedgepath:str, 
+                        step:dict):    
+    if not os.path.exists(processedgepath):
+        processedge = {}
+    else:
+        with open(processedgepath) as handle:
+            processedge = json.loads(handle.read())
+
+    if len(processedge.keys()) != 0:
+        last_item = max([int(k) for k in processedge.keys()])
+    else:
+        last_item = 0            
+
+    # last_item = max([int(k) for k in processedge.keys()])
+    processedge [last_item+1] = step
+
+    if step["name"] in processedgepath[:-5].split('_'):
+        newprocessedgepath = f'{processedgepath[:-5]}.json'
+    else:
+        newprocessedgepath = f'{processedgepath[:-5]}_{step["name"]}.json'
+    
+    with open(newprocessedgepath,"w") as f:
+        json.dump(processedge,f)
 
 def run_workflow (path:str, 
                   folder:str, 
@@ -49,10 +94,9 @@ def run_workflow (path:str,
     """
     
 
-    
-    steps = [v['name'] for v in workflow.values()]
+    # steps = [v['name'] for v in workflow.values()]
 
-    export_workflow(path, folder, workflow, steps)
+    # export_workflow(path, folder, workflow, steps)
 
     for step in workflow.values():  
 
@@ -69,6 +113,8 @@ def run_workflow (path:str,
 
         dir_dict = create_directory_dictionary ('/'.join([path,folder]))
         last_step = max([int(key.split('_')[-2]) for key in dir_dict.keys()])
+
+        process_info = {}
 
         for ind,processes in paths_subfolders.items():
                               
@@ -87,7 +133,7 @@ def run_workflow (path:str,
             filepaths = {}
 
             # defining list of secondary datasets needed to proceed with the procedure
-            secondary_data = {'linkname':'linkfilepath','labelname':'labelfilepath','nodesname':'nodefilepath'}
+            secondary_data = {'linkname':'linkfilepath','labelname':'labelfilepath','nodesname':'nodefilepath','graphname':'graphfilepath'}
 
             for name,filepath in secondary_data.items():
 
@@ -132,8 +178,6 @@ def run_workflow (path:str,
 
             temp_kwargs.update (filepaths)
 
-            print(step['variables'].keys())
-
             if 'nodesname' in step['variables'].keys():
                 df = pd.read_csv (temp_kwargs['nodefilepath'],sep=",")
 
@@ -143,13 +187,9 @@ def run_workflow (path:str,
 
                 temp_kwargs['params'] = params          
 
-            else:
-                print (11111110)
-                continue          
-
             temp_kwargs.update(step['variables'])
 
-            procedures (**temp_kwargs)
+            process_info [ind] = procedures (**temp_kwargs)
 
             # try:
             #     procedures (**temp_kwargs)
@@ -158,7 +198,7 @@ def run_workflow (path:str,
 
             # except:
             #     print('\nProcesses of {} is incomplete!\n'.format(step['name']))
-
+            #     print(temp_kwargs)
 
             if len(missing_files) > 0:
                 missing_files_str = ','.join([file for file in missing_files])
@@ -174,8 +214,41 @@ def run_workflow (path:str,
                                                             for process,files in processes.items() 
                                                                 for file in files if process == step['derived_from']]
                             }
-            
+
             move_resulting_files(path,folder,subfolder,step,folder_dict,last_step)
+
+            # preparing workflow file 
+            workflow_files = [file for file in os.listdir(f'{path}{folder}') if file.endswith('.json') and file.startswith('workflow')]
+
+            if len(workflow_files) > 0:
+                workflow_filename = max(workflow_files, key=lambda file: file.count('-'))
+            else:
+                workflow_filename = 'workflow.json'
+
+            # append step to workflow file
+            workflowpath = f'{path}{folder}/{workflow_filename}'
+            print(process_info)
+            step ['process_info'] = process_info 
+            update_workflow(workflowpath, step)
+
+
+            # preparing processing edge file 
+            processedge_files = [file for file in os.listdir(f'{path}{folder}') if file.endswith('.json') and file.startswith('edges')]
+            if len(processedge_files) > 0:
+                processedge_filename = max(processedge_files, key=lambda file: file.count('-'))
+            else:
+                processedge_filename = 'edges.json'  
+
+            # append processing edges to edge file
+            processedgepath = f'{path}{folder}/{processedge_filename}'
+            print(process_info)
+            edge_set = {(fp.split('/')[-2].split('_')[-1],step['name']) for fp in filepaths.values()}
+                         
+            edge_set.add((step['derived_from'],step['name'])) 
+            print(edge_set)
+            update_processedge(processedgepath, edge_set)
+
+            
 
         
 

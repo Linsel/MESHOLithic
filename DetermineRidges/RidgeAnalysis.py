@@ -648,9 +648,9 @@ class PolylineGraphs (LabelledMesh):
                     if n_l in self.neighbouring_labels[label]
                 }    
 
-    def  segments_export (self):
+    # def  segments_export (self):
 
-        self.segments
+    #     self.segments
 
 
 
@@ -804,20 +804,20 @@ class PolylineGraphs (LabelledMesh):
 
 
     def get_DiG_ridge_properties(self,
-                                 graphname:str):  
+                                 graphtype:str):  
 
         """
         Retrieves basic properties of a specified directed ridge graph.
 
         Args:
-            graphname (str): The name of the directed ridge graph type.
+            graphtype (str): The name of the directed ridge graph type.
 
         Attributes:
             DiG_properties (dict): dictionary containing edges (keys) and basic properties ('degree','degree_weigthed','betweenness_centrality') 
             of the undirected ridge graph (values). 
         """             
 
-        self.DiG_properties = get_basic_graph_properties(self.DiG_ridges [graphname])
+        self.DiG_properties = get_basic_graph_properties(self.DiG_ridges [graphtype])
 
     def get_G_ridge_properties(self):
 

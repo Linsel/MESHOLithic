@@ -203,7 +203,7 @@ class TransformLabelledMesh (LabelledMesh):
         # Write scar label file
         write_labels_txt_file (temp_dict_label, ''.join ([ self.path, 
                                                         self.id,
-                                                        self.preprocessed,                                                     
+                                                        # self.preprocessed,                                                     
                                                         '_'.join([  '',
                                                                     'scar-labels'])
                                                         ]))        

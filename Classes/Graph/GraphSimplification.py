@@ -3,6 +3,16 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 
+from Functions.EssentialEdgesFunctions import get_manual_links
+
+def simplify_directed_edges (nodes, linkfilepath):
+
+    edges = get_manual_links (linkfilepath)
+
+    edges_simp = {e for e in edges if e[0] in nodes and e[1] in nodes}
+
+    return edges_simp
+
 # simplify graph once by parameter
 def simplify_graph (G: nx.Graph,
                     param:dict = None, 
@@ -32,13 +42,27 @@ def simplify_graph (G: nx.Graph,
     if high_low == None:
         high_low = 0     
 
+    
     if high_low == 0:
         to_keep = [i for i,j in param if j > tresh]
     
     elif high_low == 1:
         to_keep = [i for i,j in param if j < tresh]
 
+    print(len([i for i,j in param]),len(to_keep))
+
     G_sub = G.subgraph(to_keep)
+
+    # Transfer node attributes
+    for node in G_sub.nodes():
+        G_sub.nodes[node].update(G.nodes[node])
+
+    # Transfer edge attributes
+    for edge in G_sub.edges():
+        G_sub.edges[edge].update(G.edges[edge])
+
+    print(len(G_sub.nodes()),len(G_sub.edges()))
+    print(len(G.nodes()),len(G.edges()))
 
     return  G_sub
 
@@ -153,6 +177,29 @@ def detect_retouches_iter (G: nx.Graph,
     return G_retouch_edges
 
 
+def label_as_retouched_edge (segments_dict,retouch_edge,segment_label_dict):
+
+    """
+    Update exchange ridge label dictionary with amount of canceled nodes between them.  
+
+    """
+
+
+    ridge_label_edge = {vals['edge']: key for key, vals in segments_dict.items()}
+
+    retouch_ridge_label = {edge:vals for edge,vals in retouch_edge.items()}
+
+    labels_filtered = {vals:retouch_ridge_label[key] if key in retouch_ridge_label.keys() else retouch_ridge_label[(key[1],key[0])]  
+    
+                            for key,vals in ridge_label_edge.items() 
+                            
+                                if key in retouch_ridge_label.keys() or (key[1],key[0]) in retouch_ridge_label.keys() } 
+
+    labels = {n: labels_filtered[label] 
+                    for n,label in segment_label_dict.items() 
+                        if label in labels_filtered.keys() }
+
+    return labels
 
     # if iterations == None:
     #     iterations = 2

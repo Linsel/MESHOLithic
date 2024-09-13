@@ -15,13 +15,13 @@ from DetermineRidges.TransformLabelledMesh import TransformLabelledMesh
 from Classes.Graph.GraphPlotting import ChaineOperatoire,GraphEvaluation
 from Classes.Paths import Paths
 from Classes.TestClasses.testObjects import testObjects
-
+from Classes.BasicClasses import manualEdges
 
 from IntegralInvariants.II1DClasses import MSIIChaineOperatoire
 
 
 # import timing function decorator  
-from Functions.EssentialDecorators import timing
+from Functions.EssentialDecorators import timing,time_tracker
 
 
 
@@ -36,6 +36,10 @@ from Functions.Procedures.TransformLabbelledMeshProcedures import scar_to_ridge_
 from Functions.Procedures.MSIIChaineOperatoireProcedures import CO_prepare_procedure,MSII_procedure,MSII_feature_vector_procedure,CO_concavity_procedure,CO_angle_procedure
 from Functions.Procedures.GraphEvaluationProcedures import graph_undirected_procedure,graph_direct_procedure,graph_direct_parameter_procedure,graph_evaluate_procedure,graph_direct_network_parameter_procedure
 from Functions.Procedures.ChaineOperatoireProcedures import edge_to_arrow_procedure
+
+# Graph Simplification
+
+from Functions.Procedures.GraphSimplificationProcedures import graph_simplification_procedure,retouch_edge_procedure
 
 # Data processing
 from Functions.Procedures.DataProcedures import merge_data_procedure,single_value_evaluation_procedure,xlsx_to_csv_sheets_procedure
@@ -143,6 +147,26 @@ def graph_procedures (  obj:GraphEvaluation = None,
     func(obj,**kwargs)
 
     return obj    
+
+
+
+def GraphSimplificationProcedures (obj:manualEdges = None,
+                           **kwargs):
+
+    # if obj == None:
+    #     obj = TransformLabelledMesh()
+    method = kwargs['method']
+
+    procedures = {'graph_simplification':graph_simplification_procedure,
+                #   'graph_simplification_iter':graph_simplification_iterator_procedure,
+                  'detect_retouches':retouch_edge_procedure,
+                #   'detect_retouches_iter':detect_retouches
+                  }
+    func = procedures.get(method)
+
+    func(obj,**kwargs)
+
+    return obj
 
 @timing
 def co_procedures (obj:ChaineOperatoire = None,
@@ -252,16 +276,18 @@ def testObjects_procedures(obj: object = None,
     return obj  
 
 #
-@timing
+# @timing
+@time_tracker
 def procedures (obj: object = None, 
                 **kwargs):
-    
+        
     class_type = kwargs['class']
 
     objects = { 'labelledmesh':LabelledMesh,
                 'transform_labelledmesh':TransformLabelledMesh,
                 'CO-MSII':MSIIChaineOperatoire,
                 'GRAPH':GraphEvaluation,
+                'GRAPH-SIMP':manualEdges,
                 'CO':ChaineOperatoire,
                 'GigaMesh':object,
                 'Helpers':object,
@@ -278,6 +304,7 @@ def procedures (obj: object = None,
                   'transform_labelledmesh':transform_labelledmesh_procedures,
                   'CO-MSII':MSII_chaineoperatoire_procedures,
                   'GRAPH':graph_procedures,
+                  'GRAPH-SIMP':GraphSimplificationProcedures,
                   'CO':co_procedures,
                   'GigaMesh':GigaMesh_procedures,
                   'Helpers':helper_procedures,

@@ -7,7 +7,7 @@ sys.path.insert(0, parentdir)
 from util import *
 
 # compare two operational sequences 
-from Functions.EvaluateGraph import directed_edges_parameters, export_links,direct_edges_w_parameter,direct_edges_w_phase,export_graphs_json
+from Functions.EvaluateGraph import directed_edges_parameters, export_links,direct_edges_w_parameter,direct_edges_w_phase,export_graphs_json,export_graph_to_json
 
 from Functions.EssentialEdgesFunctions import get_manual_links#get_manual_edges,export_links,export_links_eval
 
@@ -84,6 +84,8 @@ def graph_undirected_procedure (obj,**kwargs):
 
     export_graphs_json(obj.G_ridges, ''.join([path,id,preprocessed,'_G.json']))   
 
+    export_graph_to_json(obj.G_ridges, ''.join([path,id,preprocessed,'_Graph.json'])) 
+
 
 def graph_direct_procedure (obj,**kwargs):
 
@@ -144,13 +146,6 @@ def graph_direct_network_parameter_procedure (obj,**kwargs):
     
     del obj
 
-    edges = get_manual_links (linkfilepath)
-
-    eval_edge_directions = {}
-
-    for k,v in G_network_parameters.items():
-
-        eval_edge_directions [k] = directed_edges_parameters(path,id,edges,v,k) 
 
     # Convert the dictionary to a JSON string
     json_data = json.dumps(G_network_parameters, indent=3)
@@ -160,6 +155,15 @@ def graph_direct_network_parameter_procedure (obj,**kwargs):
     # Save the JSON string to a file
     with open(graph_file, 'w') as f:
         f.write(json_data)  
+
+
+    edges = get_manual_links (linkfilepath)
+
+    eval_edge_directions = {}
+
+    for k,v in G_network_parameters.items():
+
+        eval_edge_directions [k] = directed_edges_parameters(path,id,edges,v,k) 
 
     # Convert the dictionary to a JSON string
     json_data = json.dumps(eval_edge_directions, indent=3)
@@ -227,6 +231,7 @@ def graph_direct_parameter_procedure (obj,**kwargs):
 
     graph_export(obj,**kwargs)
 
+
 # @timing
 def graph_evaluate_procedure (obj,**kwargs):
 
@@ -269,7 +274,9 @@ def update_segment_label_dict(obj, current_dict, depth=4):
     # Recur to process the next level of neighbors
     return update_segment_label_dict(obj,segment_label_dict_next, depth - 1)
 
+
 def graph_export (obj,**kwargs):
+
 
     # LabelledMesh init
     path = kwargs ['path'] 
@@ -302,11 +309,13 @@ def graph_export (obj,**kwargs):
     # Convert the dictionary to a JSON string
     json_data = json.dumps(obj.segments_dict, indent=3)
 
-    graph_file = ''.join([path,id,'_'.join([preprocessed,'graph.json'])])
+    graph_file = ''.join([path,id,'_'.join([preprocessed,'graph-segments.json'])])
 
     # Save the JSON string to a file
     with open(graph_file, 'w') as f:
         f.write(json_data)
+
+    export_graph_to_json(obj.G_ridges, ''.join([obj.path,obj.id,obj.preprocessed,'_G.json'])) 
 
     segment_label_dict = {node:s_id for s_id, segment in obj.segments_dict.items() for node in segment ['nodes']}
 
@@ -316,4 +325,3 @@ def graph_export (obj,**kwargs):
     segment_label = ''.join([path,id,'_'.join([preprocessed,'updated-labels-bt{}'.format(str(border_thickness))])])
 
     write_labels_txt_file (obj.segment_label_dict, segment_label)
-

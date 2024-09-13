@@ -144,7 +144,7 @@ def direct_graph_area_procedure (obj,**kwargs):
 
     obj.area = {n:label[0].area for n,label in obj.submeshes.items()}
 
-    directededges_parameters(path,id,edges,obj.area,'area')
+    directed_edges_parameters(path,id,edges,obj.area,'area')
 
 @timing
 def export_ridges_mesh_procedure (obj,**kwargs):

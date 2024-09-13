@@ -71,6 +71,17 @@ def color_to_scar_labels_procedure(obj,**kwargs):
     # color_to_label(**kwargs)
 
     #####
+    if '_' in kwargs['id']:
+
+        ind = kwargs['id'].split('_')
+        preprocessing = '_'.join(ind[1:])
+
+        kwargs.update({ 'id':ind[0],
+                        'preprocessed': f'_{preprocessing}'})        
+
+    # else:
+    #     ind = kwargs['id']
+     
 
     method = ''.join([parentdir,'/../minions/ColorMinions/color_to_labels.py'])
     kwargs.update({'method':method})

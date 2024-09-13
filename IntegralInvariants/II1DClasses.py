@@ -507,11 +507,11 @@ class MSIIChaineOperatoire (MSIIGraphs):
     def __init__(self):
         super().__init__()
 
-    def create_chaine_operatoire (self,graphname,radius_scale,circumference_scale):
+    def create_chaine_operatoire (self,graphtype,radius_scale,circumference_scale):
 
-        self.create_nodes_mesh(self.DiG_ridges[graphname].nodes,radius_scale)
+        self.create_nodes_mesh(self.DiG_ridges[graphtype].nodes,radius_scale)
 
-        self.create_arrows_mesh(self.DiG_ridges[graphname],circumference_scale)
+        self.create_arrows_mesh(self.DiG_ridges[graphtype],circumference_scale)
 
         self.create_ridges_mesh()
 
@@ -519,7 +519,7 @@ class MSIIChaineOperatoire (MSIIGraphs):
 
         self.ridges_arrows_mesh.export(''.join ([self.path, 
                                                  self.id,
-                                                 '-'.join(['_MSII','links',str(graphname),'r{}'.format(str(self.radii[self.nrad]))]),                                       
+                                                 '-'.join(['_MSII','links',str(graphtype),'r{}'.format(str(self.radii[self.nrad]))]),                                       
                                                  '.ply']),
                                                  file_type='ply')
 
@@ -558,16 +558,16 @@ class MSIIChaineOperatoire (MSIIGraphs):
         vert_dict.update({len(vert_dict.keys()) + n_vert + 1:3 for n_vert in range(0,len(self.ridges_mesh.vertices))})
         self.vert_dict = vert_dict
 
-    def create_chaine_operatoire_functvals (self,graphname):
+    def create_chaine_operatoire_functvals (self,graphtype):
 
-        num_arrow_verts = int(len(self.arrows_mesh.vertices)/len(self.DiG_ridges[graphname].edges))
+        num_arrow_verts = int(len(self.arrows_mesh.vertices)/len(self.DiG_ridges[graphtype].edges))
 
         self.arrow_dict_funcval = {}
 
-        for n,edge in enumerate(self.DiG_ridges[graphname].edges):
+        for n,edge in enumerate(self.DiG_ridges[graphtype].edges):
             for i in range (0 + n * num_arrow_verts, 99 + n * num_arrow_verts):
 
-                self.arrow_dict_funcval [i] = self.DiG_ridges[graphname].edges[edge]['weight']
+                self.arrow_dict_funcval [i] = self.DiG_ridges[graphtype].edges[edge]['weight']
 
 
         vert_dict = {n_vert:self.arrow_dict_funcval[n_vert] for n_vert in range(0,len(self.arrows_mesh.vertices))}
