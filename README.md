@@ -1,2 +1,2 @@
 # MESHoLithic
-## Mesh-based Extraction of Scar Historical Order of Lithic artifacts 
+## *M*esh-based *E*xtraction of *S*cars and their *H*istorical *O*rder on *LITHIC* artifacts 
