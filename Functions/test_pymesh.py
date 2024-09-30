@@ -24,8 +24,11 @@ path = '/media/linsel/Extreme Pro/3D/TEST_DATA/'
 # mesh_B = pymesh.load_mesh(f"{path}0_001_GMCF_O_simp.ply")
 # # mesh_B = pymesh.load_mesh(f"{path}RF.c-7.ply")
 
-mesh_A = pymesh.load_mesh(f"{path}0_000_GMCF_simp05.ply")
-mesh_B = pymesh.load_mesh(f"{path}0_001_GMCF_O_simp05.ply")
+mesh_A = pymesh.load_mesh(f"{path}0_000_GMCF_simp05-05.ply")
+mesh_B = pymesh.load_mesh(f"{path}0_001_GMCF_O_simp05-05.ply")
+
+
+
 output_mesh = pymesh.boolean(mesh_A, mesh_B,
                             operation="difference",
                             engine="igl")
