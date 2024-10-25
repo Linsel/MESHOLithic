@@ -196,6 +196,79 @@ def get_close_vertex_indices_kdtree_distance (  mesh_verts:np.array,
 
     return func_vals
 
+    
+def get_close_vertex_indices_label_distance (  path:str,
+                                            meshname:str,                                         
+                                            labels:dict,
+                                            df_nodes: pd.DataFrame,
+                                            mesh_verts:np.array, 
+                                            mesh2_verts:np.array,
+                                            # mesh2_edges:list, 
+                                            tolerance:float=9e-1):
+    """
+    Checks if any vertex in `mesh2_verts` is within a specified distance `tolerance` from a vertex in `mesh_verts` 
+    using a KDTree for efficient proximity searches. If a vertex in `mesh2_verts` is found to be close 
+    to a vertex in `mesh_verts`, the label of the closest vertex from `mesh_verts` is assigned to it. 
+    If no nearby vertex from `mesh_verts` is found within the distance threshold, a new label is assigned 
+    to the vertex in `mesh2_verts`.
+
+    Params:
+        path (str): Path to files.
+        mesh_name (str): Filename of mesh.
+        labels (dict): Contains vertices (keys) and labels of mesh_verts.
+        df_nodes (pd.DataFrame): DataFrame including labels and their position in operational sequence. 
+        mesh2_verts (np.array): Array of vertices from the intersection mesh.
+        mesh2_verts (np.array): Array of vertices from the intersection mesh.
+        tolerance (float): Tolerance for distance checking.
+
+    Returns:
+        idx_labels (dict): Dictionary idx_labels .
+        
+    """
+    tree = KDTree(mesh_verts)
+    num_verts = len(mesh2_verts)
+    report_interval = len(mesh2_verts) / 100000
+    idx_labels = {}
+    idx_distance = {}
+    num_labels = max (labels.values())
+
+    # Add new label node to node file
+    previous_step = int(df_nodes[['phase']].max()[0])
+    df_nodes.loc[len(df_nodes.index)] = [num_labels+1,previous_step+1,'','negative']
+
+
+    # Query all vertices in the mesh against the KDTree for proximity checks
+    for i in range(num_verts):
+        if i % report_interval == 0 and i > 0:
+            print(f'{i / num_verts * 100:.2f}% of vertices processed.')
+
+        # Query the KDTree to find the nearest distance to any intersection vertex
+        dist, idx = tree.query(mesh2_verts[i],k=1)
+
+        idx_distance [i] = dist
+
+
+        # If the distance is less than the tolerance, add the index
+        if dist < tolerance:
+            idx_labels [i] = labels [idx]
+        else:
+            idx_labels [i] = num_labels + 1
+    
+    # return labels_idxs
+    write_labels_file (idx_labels, ''.join ([ path, 
+                                                    meshname,
+                                                    '_simple-labels'
+                                                    ]))    
+    
+    # Export new node file
+    df_nodes.to_csv(''.join([   path, 
+                                meshname,
+                                '_simple-nodes.csv']),
+                                index=False)
+    
+    return idx_labels,df_nodes,idx_distance
+
+
 def create_final_label_nodes (  idx_labels:dict,
                                 df_nodes: pd.DataFrame,
                                 mesh2_verts:np.array,

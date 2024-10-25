@@ -6,15 +6,16 @@ pparentdir = os.path.dirname(parentdir)
 sys.path.insert(0, currentdir) 
 sys.path.insert(0, parentdir) 
 sys.path.insert(0, pparentdir) 
-# sys.path.insert(0, ''.join([pparentdir,'/minions'])) 
-# sys.path.insert(0, ''.join([parentdir,'/Functions','/Procedures'])) 
+
 import meta_util
 
-from close_vertex_idx import *
+# from close_vertex_idx import *
+from minions.LabelMinions  import region_growing
+from minions.MeshMonitoringMinions import * 
 
 def main():
 
-    path, mesh_1, mesh_2, labelfilepath,nodesfilepath, tolerance = sys.argv[1:]
+    path, mesh_1, mesh_2, labelfilepath,nodesfilepath, tolerance, dist_thres = sys.argv[1:]
 
     # Importing labelfile and nodesfile of mesh_1 
     df_label = pd.read_csv(labelfilepath,skiprows=5,header=None,sep=' ',names=['a','b'],dtype=int)  
@@ -27,6 +28,7 @@ def main():
     meshname1 = f'{meshname1}-diff'
 
     tolerance = float(tolerance)
+    dist_thres = float(dist_thres)
 
     # Load two meshes (mesh1 is the previous state of mesh, mesh2 is the next state of the same object.)
 
@@ -38,6 +40,7 @@ def main():
     mesh2 = trimesh.load(f'{path}{mesh_2}')
     mesh2_verts = mesh2.vertices # get_close_vertex_indices
     mesh2_edges = mesh2.edges
+    mesh2_neighbors = mesh2.vertex_neighbors
     del mesh2
 
     
@@ -47,18 +50,16 @@ def main():
     # with new label (n+1).
     print(f'Start process: labeling vertices of {mesh_1} in distance {str(tolerance)} of {mesh_2}') 
 
-    idx_labels,df_nodes_label = get_close_vertex_indices_kdtree_label(path,meshname2,labels,df_nodes,mesh1_verts,mesh2_verts,tolerance)
+    idx_labels,df_nodes_label,distance = get_close_vertex_indices_label_distance (path,meshname2,labels,df_nodes,mesh1_verts,mesh2_verts,tolerance)
+
+    separated_label, df_nodes_separated = create_separated_label_nodes(idx_labels,df_nodes_label,mesh2_verts,mesh2_edges)
+    grown_label = region_growing(path,meshname2,mesh2_verts,mesh2_edges,mesh2_neighbors,distance,separated_label,dist_thres,2)#)
 
     # Creates of the innitial label a newly labeled file with separately labeled connected components 
-    final_label,df_final_nodes_label = create_final_label_nodes (idx_labels,df_nodes_label,mesh2_verts,mesh2_edges)
+    final_label,df_final_nodes_label = create_final_label_nodes (grown_label,df_nodes_separated,mesh2_verts,mesh2_edges)
 
-    
+    export_final_label_nodes(path,meshname2,final_label,df_final_nodes_label)
 
-    if len(idx_labels.keys()) == len(final_label.keys()):
-        export_final_label_nodes(path,meshname2,final_label,df_final_nodes_label)
-
-    else:
-        print(len(idx_labels.keys()), len(final_label.keys()))
 
     # Create feature vector with vertex distance between mesh2 to mesh1 vertices.
     # func_vals =  get_close_vertex_indices_kdtree_distance(mesh1_verts,mesh2_verts)
