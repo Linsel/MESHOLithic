@@ -23,8 +23,6 @@ from IntegralInvariants.II1DClasses import MSIIChaineOperatoire
 # import timing function decorator  
 from Functions.EssentialDecorators import timing,time_tracker
 
-
-
 # labelled meshes 
 from Functions.Procedures.LabbelledMeshProcedures import ridge_prepare_procedure,kmeans_label_procedure,kmeans_slice_procedure,label_slice_procedure,centroids_NNs_procedure,export_ridges_mesh_procedure,direct_graph_area_procedure,update_label_procedure
 from Functions.Procedures.SubmeshesProcedures import submeshes_procedure, submeshes_mean_quality_procedure,submeshes_area_procedure
