@@ -121,7 +121,7 @@ def single_value_evaluation_procedure (obj,**kwargs):
     edge_params = {func_name:{k:{c:func([df[c][n] if n in df[c].index else 0 for n in vals['nodes']]) for c in df.columns} for k,vals in G_edges.items() } for func_name,func in funcs.items() }
 
     # import updated border labels
-    border_path = get_file_paths_filtered(**{'path':path,'folder':folder,'filename':f'updated-labels-bt{border_thickness}.txt'})[id]
+    border_path = get_file_paths_filtered(**{'path':path,'folder':folder,'filename':f'updated-labels-bt{border_thickness}.txt'})[id][0]
 
     # break
     

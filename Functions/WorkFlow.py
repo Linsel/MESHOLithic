@@ -246,7 +246,7 @@ def run_workflow (path:str,
                          
             edge_set.add((step['derived_from'],step['name'])) 
             print(edge_set)
-            update_processedge(processedgepath, edge_set)
+            # update_processedge(processedgepath, edge_set)
 
             
 

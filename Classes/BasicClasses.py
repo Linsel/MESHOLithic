@@ -136,7 +136,13 @@ class Mesh:
         self.metadata = tri_mesh.metadata
 
         self.kdtree = tri_mesh.kdtree
-         
+
+        try:
+            self.metadata ['ply_raw'] = self.metadata ['_ply_raw']
+
+        except:
+            self.metadata ['ply_raw'] = self.metadata ['ply_raw']
+
     def get_quality(self):
 
         """
@@ -144,6 +150,7 @@ class Mesh:
         """      
 
         self.quality = self.metadata ['ply_raw']['vertex']['data']['quality']
+
 
     # saving quality in accesible variable or calculating the maximum gaussian curvature in 8 diffent radii
     def get_or_calc_curvature(self):
