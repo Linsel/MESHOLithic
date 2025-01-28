@@ -95,6 +95,19 @@ def kmeans_slice_procedure (obj,**kwargs):
     obj.kmeans_slice()
 
 @timing
+def kmeans_labels_nodes_procedure (obj,**kwargs):
+    path = kwargs ['path'] 
+    id = kwargs ['id']
+    preprocessed = kwargs ['preprocessed']
+    labelfilepath = kwargs ['labelfilepath']
+
+    obj.load_labelled_mesh(path,id,preprocessed,labelfilepath)
+
+    obj.get_front_and_back_kmeans()
+
+    obj.kmeans_labels_nodes()
+
+@timing
 def label_slice_procedure (obj,**kwargs):
 
     path = kwargs ['path'] 

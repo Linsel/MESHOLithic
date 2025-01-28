@@ -575,18 +575,18 @@ class MSIIChaineOperatoire (MSIIGraphs):
         vert_dict.update({len(vert_dict.keys()) + n_vert + 1:3 for n_vert in range(0,len(self.ridges_mesh.vertices))})
         self.vert_dict = vert_dict        
 
-    def label_connections_nodes (self):
-        label_vertices(  self,
-                0,
-                self.connections_mesh.vertices,
-                self.G_ridges.nodes, 
-                '_connections')
+    # def label_connections_nodes (self):
+    #     label_vertices(  self,
+    #             0,
+    #             self.connections_mesh.vertices,
+    #             self.G_ridges.nodes, 
+    #             '_connections')
 
-        label_vertices(  self, 
-                len(self.connections_mesh.vertices),
-                self.nodes_mesh.vertices,
-                self.centroids.keys(),
-                '_nodes')
+    #     label_vertices(  self, 
+    #             len(self.connections_mesh.vertices),
+    #             self.nodes_mesh.vertices,
+    #             self.centroids.keys(),
+    #             '_nodes')
         
     def export_max_func_val (self,func_val_name):    
 

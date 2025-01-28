@@ -44,7 +44,6 @@ def prep_graph_mesh_procedure(obj,**kwargs):
 
     return obj
 
-
 def graph_undirected_procedure (obj,**kwargs):
 
     # LabelledMesh init

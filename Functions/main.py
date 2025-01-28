@@ -24,7 +24,7 @@ from IntegralInvariants.II1DClasses import MSIIChaineOperatoire
 from Functions.EssentialDecorators import timing,time_tracker
 
 # labelled meshes 
-from Functions.Procedures.LabbelledMeshProcedures import ridge_prepare_procedure,kmeans_label_procedure,kmeans_slice_procedure,label_slice_procedure,centroids_NNs_procedure,export_ridges_mesh_procedure,direct_graph_area_procedure,update_label_procedure
+from Functions.Procedures.LabbelledMeshProcedures import ridge_prepare_procedure,kmeans_label_procedure,kmeans_slice_procedure,label_slice_procedure,centroids_NNs_procedure,export_ridges_mesh_procedure,direct_graph_area_procedure,update_label_procedure,kmeans_labels_nodes_procedure
 from Functions.Procedures.SubmeshesProcedures import submeshes_procedure, submeshes_mean_quality_procedure,submeshes_area_procedure
 
 
@@ -66,7 +66,8 @@ def labelledmesh_procedures (obj:LabelledMesh = None,
 
     procedures = {'ridge_prepare':ridge_prepare_procedure,
                   'kmeans_label':kmeans_label_procedure,
-                  'kmeans_sclice':kmeans_slice_procedure, 
+                  'kmeans_slice':kmeans_slice_procedure, 
+                  'kmeans_labels_nodes':kmeans_labels_nodes_procedure, 
                   'label_slice':label_slice_procedure,
                   'direct_graph_area':direct_graph_area_procedure,
                   'export_ridges_mesh':export_ridges_mesh_procedure,

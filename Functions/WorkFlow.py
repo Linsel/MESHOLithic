@@ -41,9 +41,9 @@ def update_workflow (workflowpath:str,
     if step["name"] in workflowpath[:-5].split('_'):
         newworkflowpath = f'{workflowpath[:-5]}.json'
     else:
-        newworkflowpath = f'{workflowpath[:-5]}_{step["name"]}.json'
+        # newworkflowpath = f'{workflowpath[:-5]}_{step["name"]}.json'
+        newworkflowpath = f'{workflowpath[:-5]}_{last_item+1}.json'
     
-
     with open(newworkflowpath,"w") as f:
         json.dump(workflow,f)
 
@@ -256,16 +256,7 @@ def run_workflow (path:str,
 # old code 
 
 
-# def run_workflow (path, 
-#                   folder, 
-#                   workflow):
-
-#     last_step = get_last_step (path,folder,workflow)
-    
-#     steps = [v['name'] for v in workflow.values()]
-#     max_steps = max([v['stage'] for v in workflow.values()])
-
-#     export_workflow(path, folder, workflow, steps)
+# def run_workflow (pathworkflowpathath, folder, workflow, steps)
 
 #     for n in range(last_step[0],max_steps):
 

@@ -101,7 +101,7 @@ def directed_edges_parameters (path,id,edges,para,para_name):
 
     eval_edge_directions = {}
 
-    print(edges,para.keys())
+    # print(edges,para.keys())
 
     for case in cases:
 

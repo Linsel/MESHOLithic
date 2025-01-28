@@ -54,7 +54,8 @@ def get_manual_links(linkfilepath):
                             sep=',',header=0)
 
     
-    manual_edges  = {(int(edge[0]),int(edge[1])) for _,edge in edge_df.iterrows()}
+    # manual_edges  = {(int(edge[0]),int(edge[1])) for _,edge in edge_df.iterrows()}
+    manual_edges = {(int(edge.iloc[0]), int(edge.iloc[1])) for _, edge in edge_df.iterrows()}
 
     return manual_edges
 

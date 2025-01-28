@@ -289,6 +289,30 @@ class LabelledMesh (Mesh):
                                                                     'Kmeans-labels'])
                                                         ]))
 
+    def kmeans_labels_nodes (self):
+        """
+        
+        """
+
+        clust_verts = get_labels_IoU_max (self.dict_label,self.klabels) 
+
+        clust_data = {
+                        'cluster':[ul for ul in clust_verts.keys()],
+                        'labels':{[self.dict_label[n] for n in values] 
+                                        for values in clust_verts.values()}}
+
+
+        # Convert dictionary to DataFrame
+        df = pd.DataFrame(clust_data)
+
+        # Export DataFrame to CSV
+        file_path = ''.join ([  self.path, 
+                                self.id,
+                                '_',
+                                'Kmeans-nodes'])
+        
+        df.to_csv(file_path, index=False)
+
     def kmeans_slice (self):
         """
         Slices mesh based on IoU_max of the k-means clustering and exports submeshes.
